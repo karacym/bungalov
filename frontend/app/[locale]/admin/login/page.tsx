@@ -1,9 +1,10 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-export default function AdminLoginPage({ params }: { params: { locale: string } }) {
+export default function AdminLoginPage() {
+  const params = useParams<{ locale: string }>();
   const [email, setEmail] = useState('admin@savaskara.com');
   const [password, setPassword] = useState('123456');
   const [error, setError] = useState('');
@@ -27,15 +28,32 @@ export default function AdminLoginPage({ params }: { params: { locale: string } 
   }
 
   return (
-    <main className="mx-auto max-w-md space-y-3 p-4">
-      <h1 className="text-2xl font-bold">Admin Giris</h1>
-      <p className="text-xs text-slate-600">
-        Seed sonrasi: admin@savaskara.com / 123456
-      </p>
-      <input className="w-full rounded border p-2" value={email} onChange={(e) => setEmail(e.target.value)} />
-      <input type="password" className="w-full rounded border p-2" value={password} onChange={(e) => setPassword(e.target.value)} />
-      <button onClick={login} className="w-full rounded bg-forest p-2 text-white">Giris Yap</button>
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+    <main className="bgl-container flex min-h-[70vh] max-w-md flex-col justify-center py-12">
+      <div className="rounded-[1.75rem] border border-bgl-mist bg-white p-8 shadow-card">
+        <p className="bgl-section-title">Yonetim</p>
+        <h1 className="bgl-heading mt-2">Admin giris</h1>
+        <p className="mt-2 text-xs text-bgl-muted">Seed sonrasi: admin@savaskara.com / 123456</p>
+        <div className="mt-8 space-y-4">
+          <label className="block text-xs font-medium text-bgl-muted">
+            E-posta
+            <input className="bgl-input mt-1.5" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
+          </label>
+          <label className="block text-xs font-medium text-bgl-muted">
+            Sifre
+            <input
+              type="password"
+              className="bgl-input mt-1.5"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+            />
+          </label>
+          <button type="button" onClick={login} className="bgl-btn-primary w-full">
+            Giris yap
+          </button>
+          {error ? <p className="text-center text-sm font-medium text-red-600">{error}</p> : null}
+        </div>
+      </div>
     </main>
   );
 }

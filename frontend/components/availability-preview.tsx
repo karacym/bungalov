@@ -17,7 +17,7 @@ export function AvailabilityPreview({ bungalowId }: { bungalowId: string }) {
   }, [bungalowId]);
 
   if (error) {
-    return <p className="text-sm text-red-600">{error}</p>;
+    return <p className="text-sm font-medium text-red-600">{error}</p>;
   }
 
   const next = rows.slice(0, 14);
@@ -27,12 +27,16 @@ export function AvailabilityPreview({ bungalowId }: { bungalowId: string }) {
       {next.map((r) => (
         <div
           key={r.date}
-          className={`rounded-lg border px-2 py-2 text-center text-xs ${
-            r.isAvailable ? 'border-green-200 bg-green-50 text-green-900' : 'border-red-200 bg-red-50 text-red-800'
+          className={`rounded-xl border px-2 py-2.5 text-center text-xs font-medium ${
+            r.isAvailable
+              ? 'border-emerald-200/80 bg-emerald-50/90 text-emerald-900'
+              : 'border-rose-200/80 bg-rose-50/90 text-rose-900'
           }`}
         >
-          <div className="font-medium">{new Date(r.date).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' })}</div>
-          <div>{r.isAvailable ? 'Müsait' : 'Dolu'}</div>
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-bgl-muted">
+            {new Date(r.date).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' })}
+          </div>
+          <div className="mt-0.5">{r.isAvailable ? 'Müsait' : 'Dolu'}</div>
         </div>
       ))}
     </div>

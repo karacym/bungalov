@@ -6,6 +6,39 @@
   color-scheme: light;
 }
 
-body {
-  @apply bg-[#F8F6F1] text-slate-900;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply min-h-screen bg-bgl-cream bg-grain font-sans text-bgl-ink antialiased;
+  }
+  ::selection {
+    @apply bg-bgl-moss/20 text-bgl-ink;
+  }
+}
+
+@layer components {
+  .bgl-container {
+    @apply mx-auto w-full max-w-6xl px-4 md:px-6;
+  }
+  .bgl-section-title {
+    @apply text-xs font-semibold uppercase tracking-[0.2em] text-bgl-moss;
+  }
+  .bgl-heading {
+    @apply text-2xl font-bold tracking-tight text-bgl-ink;
+    @apply md:text-3xl;
+  }
+  .bgl-card {
+    @apply overflow-hidden rounded-2xl border border-bgl-mist/80 bg-white shadow-soft;
+  }
+  .bgl-btn-primary {
+    @apply inline-flex items-center justify-center rounded-full bg-bgl-moss px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-bgl-mossDark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bgl-moss;
+  }
+  .bgl-btn-ghost {
+    @apply inline-flex items-center justify-center rounded-full border border-bgl-mist bg-white/90 px-5 py-2.5 text-sm font-semibold text-bgl-ink shadow-sm transition hover:border-bgl-sand hover:bg-bgl-cream;
+  }
+  .bgl-input {
+    @apply w-full rounded-xl border border-bgl-mist bg-white px-4 py-3 text-sm text-bgl-ink shadow-inner outline-none transition placeholder:text-bgl-muted/70 focus:border-bgl-moss focus:ring-2 focus:ring-bgl-moss/20;
+  }
 }

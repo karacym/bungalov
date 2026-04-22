@@ -18,12 +18,29 @@ export default function PaymentPage() {
   }
 
   return (
-    <main className="mx-auto max-w-md space-y-3 p-4">
-      <h1 className="text-2xl font-bold">Odeme</h1>
-      <input className="w-full rounded border p-2" placeholder="Reservation ID" value={reservationId} onChange={(e) => setReservationId(e.target.value)} />
-      <input className="w-full rounded border p-2" placeholder="Amount" value={amount} onChange={(e) => setAmount(e.target.value)} />
-      <button onClick={initiate} className="w-full rounded bg-forest p-2 text-white">Iyzico ile Odemeye Gec</button>
-      {message ? <p className="text-sm text-slate-700">{message}</p> : null}
+    <main className="bgl-container max-w-lg py-12 md:py-16">
+      <p className="bgl-section-title">Odeme</p>
+      <h1 className="bgl-heading mt-2">Guvenli odeme</h1>
+      <p className="mt-2 text-sm text-bgl-muted">Iyzico entegrasyonu icin hazir akis. Test icin rezervasyon ID ve tutar girin.</p>
+      <div className="mt-8 space-y-4 rounded-2xl border border-bgl-mist bg-white p-6 shadow-soft">
+        <label className="block text-xs font-medium text-bgl-muted">
+          Rezervasyon ID
+          <input
+            className="bgl-input mt-1.5"
+            value={reservationId}
+            onChange={(e) => setReservationId(e.target.value)}
+            placeholder="uuid..."
+          />
+        </label>
+        <label className="block text-xs font-medium text-bgl-muted">
+          Tutar (TL)
+          <input className="bgl-input mt-1.5" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0" />
+        </label>
+        <button type="button" onClick={initiate} className="bgl-btn-primary w-full">
+          Iyzico ile odemeye gec
+        </button>
+        {message ? <p className="break-all text-sm text-bgl-muted">{message}</p> : null}
+      </div>
     </main>
   );
 }
