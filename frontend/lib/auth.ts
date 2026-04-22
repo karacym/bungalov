@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { locales } from './i18n/config';
+import { locales } from '../i18n/config';
 
 export function isLocale(value: string): value is (typeof locales)[number] {
   return locales.includes(value as (typeof locales)[number]);
