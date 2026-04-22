@@ -34,3 +34,4 @@ Tum endpointler ` /api ` prefix'i ile calisir.
 - Uygulama `PORT` ortam degiskenini Render atar; sabit port kullanma.
 - Dinleme adresi: `0.0.0.0` (kodda ayarli).
 - `prisma db push` build asamasinda calismaz (Render build ortaminda DB baglantisi bazen basarisiz olur); sema senkronu **start** sirasinda yapilir.
+- Build sirasinda `NODE_ENV=production` iken `npm install` bazen `devDependencies` yuklemez; `render.yaml` icinde `NPM_CONFIG_PRODUCTION=false` ile TypeScript ve `@types/*` paketleri yuklenir.
