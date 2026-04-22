@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ReservationStatus } from '@prisma/client';
+import { Prisma, ReservationStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -29,7 +29,12 @@ export class AdminService {
     images: string[];
     features: Record<string, unknown>;
   }) {
-    return this.prisma.bungalow.create({ data });
+    return this.prisma.bungalow.create({
+      data: {
+        ...data,
+        features: data.features as Prisma.InputJsonValue,
+      },
+    });
   }
 
   updateBungalow(
@@ -43,7 +48,14 @@ export class AdminService {
       features: Record<string, unknown>;
     }>,
   ) {
-    return this.prisma.bungalow.update({ where: { id }, data });
+    const { features, ...rest } = data;
+    return this.prisma.bungalow.update({
+      where: { id },
+      data: {
+        ...rest,
+        ...(features !== undefined && { features: features as Prisma.InputJsonValue }),
+      },
+    });
   }
 
   deleteBungalow(id: string) {
