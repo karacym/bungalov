@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  admin
+  user
+}
+
+enum ReservationStatus {
+  pending
+  paid
+  cancelled
+}
+
+model User {
+  id           String        @id @default(uuid())
+  name         String
+  email        String        @unique
+  password     String
+  role         UserRole      @default(user)
+  createdAt    DateTime      @default(now())
+  reservations Reservation[]
+}
+
+model Bungalow {
+  id            String         @id @default(uuid())
+  title         String
+  description   String
+  pricePerNight Decimal        @db.Decimal(10, 2)
+  location      String
+  images        String[]
+  features      Json
+  createdAt     DateTime       @default(now())
+  reservations  Reservation[]
+  availability  Availability[]
+}
+
+model Reservation {
+  id          String            @id @default(uuid())
+  userId      String
+  bungalowId  String
+  checkIn     DateTime
+  checkOut    DateTime
+  totalPrice  Decimal           @db.Decimal(10, 2)
+  status      ReservationStatus @default(pending)
+  createdAt   DateTime          @default(now())
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bungalow    Bungalow          @relation(fields: [bungalowId], references: [id], onDelete: Cascade)
+  payment     Payment?
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  reservationId String   @unique
+  amount        Decimal  @db.Decimal(10, 2)
+  status        String
+  provider      String   @default("iyzico")
+  createdAt     DateTime @default(now())
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+}
+
+model Availability {
+  id          String   @id @default(uuid())
+  bungalowId  String
+  date        DateTime
+  isAvailable Boolean  @default(true)
+  bungalow    Bungalow @relation(fields: [bungalowId], references: [id], onDelete: Cascade)
+
+  @@unique([bungalowId, date])
+}
+
+model Translation {
+  id  String @id @default(uuid())
+  key String @unique
+  tr  String
+  en  String
+  ar  String
+}

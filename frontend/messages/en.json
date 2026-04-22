@@ -1,0 +1,15 @@
+{
+  "nav": {
+    "home": "Home",
+    "contact": "Contact",
+    "admin": "Admin"
+  },
+  "home": {
+    "heroTitle": "Luxury bungalows in nature",
+    "heroSubtitle": "Silence, comfort and unforgettable stays"
+  },
+  "cta": {
+    "reserve": "Book Now",
+    "whatsapp": "WhatsApp"
+  }
+}

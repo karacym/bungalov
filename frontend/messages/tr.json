@@ -1,0 +1,15 @@
+{
+  "nav": {
+    "home": "Ana Sayfa",
+    "contact": "Iletisim",
+    "admin": "Yonetim"
+  },
+  "home": {
+    "heroTitle": "Doganin kalbinde luks bungalovlar",
+    "heroSubtitle": "Sessizlik, konfor ve unutulmaz bir tatil deneyimi"
+  },
+  "cta": {
+    "reserve": "Hemen Rezervasyon Yap",
+    "whatsapp": "WhatsApp"
+  }
+}
