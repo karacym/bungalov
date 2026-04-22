@@ -23,6 +23,18 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, document);
 
+  const http = app.getHttpAdapter().getInstance() as {
+    get: (path: string, handler: (req: unknown, res: { json: (b: unknown) => void }) => void) => void;
+  };
+  http.get('/', (_req, res) => {
+    res.json({
+      service: 'bungalov-backend',
+      api: '/api',
+      docs: '/api/docs',
+      bungalows: '/api/bungalows',
+    });
+  });
+
   const port = Number(process.env.PORT) || Number(configService.get('PORT')) || 4000;
   await app.listen(port, '0.0.0.0');
 }
