@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -25,9 +26,19 @@ type ReservationResponse = {
 };
 type Translation = { key: string; tr: string; en: string; ar: string };
 
+const TAB_ORDER: Tab[] = ['stats', 'bungalows', 'reservations', 'availability', 'translations'];
+const TAB_LABELS: Record<Tab, string> = {
+  stats: 'Ozet',
+  bungalows: 'Bungalovlar',
+  reservations: 'Rezervasyonlar',
+  availability: 'Musaitlik',
+  translations: 'Ceviriler',
+};
+
 export default function AdminDashboardPage() {
   const router = useRouter();
   const params = useParams<{ locale: string }>();
+  const locale = String(params.locale ?? 'tr');
   const [stats, setStats] = useState<Stats | null>(null);
   const [tab, setTab] = useState<Tab>('stats');
   const [bungalows, setBungalows] = useState<Bungalow[]>([]);
@@ -66,13 +77,18 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && !localStorage.getItem('token')) {
-      router.replace(`/${params.locale}/admin/login`);
+      router.replace(`/${locale}/admin/login`);
     }
-  }, [router, params.locale]);
+  }, [router, locale]);
 
   useEffect(() => {
     void refreshAll();
   }, [reservationPage, reservationLimit, reservationStatusFilter, reservationSearch]);
+
+  function logout() {
+    localStorage.removeItem('token');
+    router.push(`/${locale}/admin/login`);
+  }
 
   async function authFetch(path: string, init?: RequestInit) {
     const token = localStorage.getItem('token');
@@ -209,68 +225,100 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <main className="mx-auto max-w-4xl p-4">
-      <h1 className="mb-4 text-2xl font-bold">Admin Panel</h1>
-      <div className="mb-4 flex flex-wrap gap-2">
-        {(['stats', 'bungalows', 'reservations', 'availability', 'translations'] as Tab[]).map((item) => (
+    <main className="bgl-container max-w-6xl py-8 md:py-10">
+      <div className="flex flex-col gap-4 border-b border-bgl-mist/80 pb-6 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p className="bgl-section-title">Yonetim</p>
+          <h1 className="bgl-heading mt-1">Admin panel</h1>
+          <p className="mt-2 max-w-xl text-sm text-bgl-muted">Icerik, rezervasyon ve ceviri yonetimi.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href={`/${locale}`} className="bgl-btn-ghost text-sm">
+            Siteye don
+          </Link>
+          <button type="button" onClick={logout} className="rounded-full border border-rose-200 bg-rose-50 px-5 py-2.5 text-sm font-semibold text-rose-800 transition hover:bg-rose-100">
+            Cikis
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-6 flex flex-wrap gap-2">
+        {TAB_ORDER.map((item) => (
           <button
             key={item}
+            type="button"
             onClick={() => setTab(item)}
-            className={`rounded border px-3 py-1 text-sm ${tab === item ? 'bg-forest text-white' : 'bg-white'}`}
+            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+              tab === item
+                ? 'bg-bgl-moss text-white shadow-sm ring-1 ring-bgl-moss/20'
+                : 'border border-bgl-mist bg-white/90 text-bgl-muted hover:border-bgl-sand hover:text-bgl-ink'
+            }`}
           >
-            {item}
+            {TAB_LABELS[item]}
           </button>
         ))}
       </div>
 
-      {loading ? <p className="text-sm text-slate-500">Yukleniyor...</p> : null}
+      {loading ? <p className="mt-6 text-sm font-medium text-bgl-muted">Yukleniyor...</p> : null}
 
       {tab === 'stats' ? (
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card title="Users" value={stats?.users ?? 0} />
-          <Card title="Bungalows" value={stats?.bungalows ?? 0} />
-          <Card title="Reservations" value={stats?.reservations ?? 0} />
-          <Card title="Paid" value={stats?.paidReservations ?? 0} />
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard title="Kullanicilar" value={stats?.users ?? 0} />
+          <StatCard title="Bungalovlar" value={stats?.bungalows ?? 0} />
+          <StatCard title="Rezervasyonlar" value={stats?.reservations ?? 0} />
+          <StatCard title="Odenen" value={stats?.paidReservations ?? 0} accent />
         </div>
       ) : null}
 
       {tab === 'bungalows' ? (
-        <section className="space-y-4">
-          <div className="grid gap-2 rounded-xl border bg-white p-3">
-            <input className="rounded border p-2" placeholder="Baslik" value={newBungalow.title} onChange={(e) => setNewBungalow((p) => ({ ...p, title: e.target.value }))} />
-            <input className="rounded border p-2" placeholder="Aciklama" value={newBungalow.description} onChange={(e) => setNewBungalow((p) => ({ ...p, description: e.target.value }))} />
-            <input className="rounded border p-2" placeholder="Konum" value={newBungalow.location} onChange={(e) => setNewBungalow((p) => ({ ...p, location: e.target.value }))} />
-            <input className="rounded border p-2" placeholder="Fiyat / gece" value={newBungalow.pricePerNight} onChange={(e) => setNewBungalow((p) => ({ ...p, pricePerNight: e.target.value }))} />
-            <input className="rounded border p-2" placeholder="Resimler (virgulle)" value={newBungalow.images} onChange={(e) => setNewBungalow((p) => ({ ...p, images: e.target.value }))} />
-            <textarea className="rounded border p-2" placeholder="Features JSON" value={newBungalow.features} onChange={(e) => setNewBungalow((p) => ({ ...p, features: e.target.value }))} />
-            <button onClick={createBungalow} className="rounded bg-forest p-2 text-white">Bungalov Ekle</button>
+        <section className="mt-8 space-y-6">
+          <div className="bgl-card grid gap-3 p-6 md:grid-cols-2">
+            <input className="bgl-input md:col-span-2" placeholder="Baslik" value={newBungalow.title} onChange={(e) => setNewBungalow((p) => ({ ...p, title: e.target.value }))} />
+            <input className="bgl-input md:col-span-2" placeholder="Aciklama" value={newBungalow.description} onChange={(e) => setNewBungalow((p) => ({ ...p, description: e.target.value }))} />
+            <input className="bgl-input" placeholder="Konum" value={newBungalow.location} onChange={(e) => setNewBungalow((p) => ({ ...p, location: e.target.value }))} />
+            <input className="bgl-input" placeholder="Fiyat / gece" value={newBungalow.pricePerNight} onChange={(e) => setNewBungalow((p) => ({ ...p, pricePerNight: e.target.value }))} />
+            <input className="bgl-input md:col-span-2" placeholder="Resimler (virgulle URL)" value={newBungalow.images} onChange={(e) => setNewBungalow((p) => ({ ...p, images: e.target.value }))} />
+            <textarea className="bgl-input min-h-[88px] md:col-span-2" placeholder="Features JSON" value={newBungalow.features} onChange={(e) => setNewBungalow((p) => ({ ...p, features: e.target.value }))} />
+            <button type="button" onClick={createBungalow} className="bgl-btn-primary md:col-span-2">
+              Bungalov ekle
+            </button>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-4">
             {bungalows.map((b) => (
-              <article key={b.id} className="rounded border bg-white p-3">
+              <article key={b.id} className="bgl-card flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="font-semibold">{b.title}</p>
-                  <p className="text-sm text-slate-600">{b.location} - {b.pricePerNight} TL</p>
+                  <p className="font-semibold text-bgl-ink">{b.title}</p>
+                  <p className="mt-1 text-sm text-bgl-muted">
+                    {b.location} — {b.pricePerNight} TL / gece
+                  </p>
                 </div>
-                <div className="mt-2 flex gap-2">
-                  <button onClick={() => startEditBungalow(b)} className="rounded border px-3 py-1">Duzenle</button>
-                  <button onClick={() => deleteBungalow(b.id)} className="rounded border px-3 py-1 text-red-600">Sil</button>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={() => startEditBungalow(b)} className="rounded-full border border-bgl-mist bg-white px-4 py-2 text-sm font-semibold text-bgl-ink hover:border-bgl-sand">
+                    Duzenle
+                  </button>
+                  <button type="button" onClick={() => deleteBungalow(b.id)} className="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-800 hover:bg-rose-100">
+                    Sil
+                  </button>
                 </div>
               </article>
             ))}
           </div>
           {editingBungalowId ? (
-            <div className="grid gap-2 rounded-xl border bg-white p-3">
-              <h3 className="font-semibold">Bungalov Duzenle</h3>
-              <input className="rounded border p-2" placeholder="Baslik" value={editBungalow.title} onChange={(e) => setEditBungalow((p) => ({ ...p, title: e.target.value }))} />
-              <input className="rounded border p-2" placeholder="Aciklama" value={editBungalow.description} onChange={(e) => setEditBungalow((p) => ({ ...p, description: e.target.value }))} />
-              <input className="rounded border p-2" placeholder="Konum" value={editBungalow.location} onChange={(e) => setEditBungalow((p) => ({ ...p, location: e.target.value }))} />
-              <input className="rounded border p-2" placeholder="Fiyat / gece" value={editBungalow.pricePerNight} onChange={(e) => setEditBungalow((p) => ({ ...p, pricePerNight: e.target.value }))} />
-              <input className="rounded border p-2" placeholder="Resimler (opsiyonel, virgulle)" value={editBungalow.images} onChange={(e) => setEditBungalow((p) => ({ ...p, images: e.target.value }))} />
-              <textarea className="rounded border p-2" placeholder="Features JSON (opsiyonel)" value={editBungalow.features} onChange={(e) => setEditBungalow((p) => ({ ...p, features: e.target.value }))} />
-              <div className="flex gap-2">
-                <button onClick={saveEditBungalow} className="rounded bg-forest p-2 text-white">Kaydet</button>
-                <button onClick={() => setEditingBungalowId(null)} className="rounded border p-2">Vazgec</button>
+            <div className="bgl-card grid gap-3 border-t-4 border-t-bgl-moss p-6 md:grid-cols-2">
+              <h3 className="font-semibold text-bgl-ink md:col-span-2">Bungalov duzenle</h3>
+              <input className="bgl-input md:col-span-2" placeholder="Baslik" value={editBungalow.title} onChange={(e) => setEditBungalow((p) => ({ ...p, title: e.target.value }))} />
+              <input className="bgl-input md:col-span-2" placeholder="Aciklama" value={editBungalow.description} onChange={(e) => setEditBungalow((p) => ({ ...p, description: e.target.value }))} />
+              <input className="bgl-input" placeholder="Konum" value={editBungalow.location} onChange={(e) => setEditBungalow((p) => ({ ...p, location: e.target.value }))} />
+              <input className="bgl-input" placeholder="Fiyat / gece" value={editBungalow.pricePerNight} onChange={(e) => setEditBungalow((p) => ({ ...p, pricePerNight: e.target.value }))} />
+              <input className="bgl-input md:col-span-2" placeholder="Resimler (opsiyonel)" value={editBungalow.images} onChange={(e) => setEditBungalow((p) => ({ ...p, images: e.target.value }))} />
+              <textarea className="bgl-input min-h-[88px] md:col-span-2" placeholder="Features JSON (opsiyonel)" value={editBungalow.features} onChange={(e) => setEditBungalow((p) => ({ ...p, features: e.target.value }))} />
+              <div className="flex flex-wrap gap-2 md:col-span-2">
+                <button type="button" onClick={saveEditBungalow} className="bgl-btn-primary">
+                  Kaydet
+                </button>
+                <button type="button" onClick={() => setEditingBungalowId(null)} className="bgl-btn-ghost">
+                  Vazgec
+                </button>
               </div>
             </div>
           ) : null}
@@ -278,11 +326,11 @@ export default function AdminDashboardPage() {
       ) : null}
 
       {tab === 'reservations' ? (
-        <section className="space-y-2">
-          <div className="mb-3 grid gap-2 rounded border bg-white p-3 md:grid-cols-3">
+        <section className="mt-8 space-y-4">
+          <div className="bgl-card grid gap-3 p-5 md:grid-cols-3">
             <input
-              className="rounded border p-2"
-              placeholder="Email veya bungalow ara"
+              className="bgl-input"
+              placeholder="E-posta veya bungalov ara"
               value={reservationSearch}
               onChange={(e) => {
                 setReservationPage(1);
@@ -290,7 +338,7 @@ export default function AdminDashboardPage() {
               }}
             />
             <select
-              className="rounded border p-2"
+              className="bgl-input"
               value={reservationStatusFilter}
               onChange={(e) => {
                 setReservationPage(1);
@@ -298,21 +346,25 @@ export default function AdminDashboardPage() {
               }}
             >
               <option value="all">Tum durumlar</option>
-              <option value="pending">pending</option>
-              <option value="paid">paid</option>
-              <option value="cancelled">cancelled</option>
+              <option value="pending">Beklemede</option>
+              <option value="paid">Odendi</option>
+              <option value="cancelled">Iptal</option>
             </select>
-            <div className="flex items-center justify-between rounded border p-2">
+            <div className="flex items-center justify-between gap-2 rounded-xl border border-bgl-mist bg-bgl-cream/40 px-3 py-2">
               <button
-                className="rounded border px-2 py-1 text-sm disabled:opacity-50"
+                type="button"
+                className="rounded-full border border-bgl-mist bg-white px-3 py-1.5 text-xs font-semibold disabled:opacity-40"
                 disabled={reservationPage <= 1}
                 onClick={() => setReservationPage((p) => Math.max(p - 1, 1))}
               >
                 Onceki
               </button>
-              <span className="text-sm">{reservationPage} / {reservationTotalPages}</span>
+              <span className="text-xs font-medium text-bgl-muted">
+                {reservationPage} / {reservationTotalPages}
+              </span>
               <button
-                className="rounded border px-2 py-1 text-sm disabled:opacity-50"
+                type="button"
+                className="rounded-full border border-bgl-mist bg-white px-3 py-1.5 text-xs font-semibold disabled:opacity-40"
                 disabled={reservationPage >= reservationTotalPages}
                 onClick={() => setReservationPage((p) => Math.min(p + 1, reservationTotalPages))}
               >
@@ -321,13 +373,24 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           {reservations.map((r) => (
-            <article key={r.id} className="rounded border bg-white p-3">
-              <p className="font-medium">{r.bungalow?.title ?? 'Bungalov'}</p>
-              <p className="text-sm text-slate-600">{r.user?.email ?? '-'} - {r.totalPrice} TL</p>
-              <div className="mt-2 flex gap-2">
+            <article key={r.id} className="bgl-card p-5">
+              <p className="font-semibold text-bgl-ink">{r.bungalow?.title ?? 'Bungalov'}</p>
+              <p className="mt-1 text-sm text-bgl-muted">
+                {r.user?.email ?? '-'} — {r.totalPrice} TL
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
                 {(['pending', 'paid', 'cancelled'] as Reservation['status'][]).map((status) => (
-                  <button key={status} onClick={() => updateReservation(r.id, status)} className={`rounded border px-2 py-1 text-xs ${r.status === status ? 'bg-forest text-white' : ''}`}>
-                    {status}
+                  <button
+                    key={status}
+                    type="button"
+                    onClick={() => updateReservation(r.id, status)}
+                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                      r.status === status
+                        ? 'bg-bgl-moss text-white shadow-sm'
+                        : 'border border-bgl-mist bg-white text-bgl-muted hover:border-bgl-sand'
+                    }`}
+                  >
+                    {status === 'pending' ? 'Beklemede' : status === 'paid' ? 'Odendi' : 'Iptal'}
                   </button>
                 ))}
               </div>
@@ -337,49 +400,61 @@ export default function AdminDashboardPage() {
       ) : null}
 
       {tab === 'availability' ? (
-        <section className="space-y-3 rounded border bg-white p-3">
-          <select className="w-full rounded border p-2" value={selectedBungalowId} onChange={(e) => setSelectedBungalowId(e.target.value)}>
+        <section className="bgl-card mt-8 space-y-4 p-6">
+          <select className="bgl-input" value={selectedBungalowId} onChange={(e) => setSelectedBungalowId(e.target.value)}>
             {bungalows.map((b) => (
-              <option key={b.id} value={b.id}>{b.title}</option>
+              <option key={b.id} value={b.id}>
+                {b.title}
+              </option>
             ))}
           </select>
-          <input type="date" className="w-full rounded border p-2" value={availabilityForm.date} onChange={(e) => setAvailabilityForm((p) => ({ ...p, date: e.target.value }))} />
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={availabilityForm.isAvailable} onChange={(e) => setAvailabilityForm((p) => ({ ...p, isAvailable: e.target.checked }))} />
+          <input type="date" className="bgl-input" value={availabilityForm.date} onChange={(e) => setAvailabilityForm((p) => ({ ...p, date: e.target.value }))} />
+          <label className="flex items-center gap-2 text-sm font-medium text-bgl-ink">
+            <input type="checkbox" className="h-4 w-4 rounded border-bgl-mist text-bgl-moss" checked={availabilityForm.isAvailable} onChange={(e) => setAvailabilityForm((p) => ({ ...p, isAvailable: e.target.checked }))} />
             Musait
           </label>
-          <button onClick={saveAvailability} className="rounded bg-forest p-2 text-white">Takvime Kaydet</button>
-          <div className="space-y-1">
+          <button type="button" onClick={saveAvailability} className="bgl-btn-primary">
+            Takvime kaydet
+          </button>
+          <ul className="max-h-64 space-y-2 overflow-y-auto rounded-xl border border-bgl-mist/80 bg-bgl-cream/30 p-3 text-sm">
             {availability.slice(0, 20).map((a) => (
-              <p key={a.date} className="text-sm">{new Date(a.date).toLocaleDateString()} - {a.isAvailable ? 'Musait' : 'Dolu'}</p>
+              <li key={a.date} className="flex justify-between rounded-lg bg-white/80 px-3 py-2 ring-1 ring-black/5">
+                <span className="text-bgl-ink">{new Date(a.date).toLocaleDateString('tr-TR')}</span>
+                <span className={a.isAvailable ? 'font-medium text-emerald-700' : 'font-medium text-rose-700'}>{a.isAvailable ? 'Musait' : 'Dolu'}</span>
+              </li>
             ))}
-          </div>
+          </ul>
         </section>
       ) : null}
 
       {tab === 'translations' ? (
-        <section className="space-y-3 rounded border bg-white p-3">
-          <input className="w-full rounded border p-2" placeholder="Key" value={newTranslation.key} onChange={(e) => setNewTranslation((p) => ({ ...p, key: e.target.value }))} />
-          <input className="w-full rounded border p-2" placeholder="TR" value={newTranslation.tr} onChange={(e) => setNewTranslation((p) => ({ ...p, tr: e.target.value }))} />
-          <input className="w-full rounded border p-2" placeholder="EN" value={newTranslation.en} onChange={(e) => setNewTranslation((p) => ({ ...p, en: e.target.value }))} />
-          <input className="w-full rounded border p-2" placeholder="AR" value={newTranslation.ar} onChange={(e) => setNewTranslation((p) => ({ ...p, ar: e.target.value }))} />
-          <button onClick={upsertTranslation} className="rounded bg-forest p-2 text-white">Ceviri Kaydet</button>
-          <div className="space-y-1">
-            {translations.slice(0, 30).map((t) => (
-              <p key={t.key} className="text-sm">{t.key}: {t.tr}</p>
+        <section className="bgl-card mt-8 space-y-4 p-6">
+          <input className="bgl-input" placeholder="Key" value={newTranslation.key} onChange={(e) => setNewTranslation((p) => ({ ...p, key: e.target.value }))} />
+          <input className="bgl-input" placeholder="TR" value={newTranslation.tr} onChange={(e) => setNewTranslation((p) => ({ ...p, tr: e.target.value }))} />
+          <input className="bgl-input" placeholder="EN" value={newTranslation.en} onChange={(e) => setNewTranslation((p) => ({ ...p, en: e.target.value }))} />
+          <input className="bgl-input" placeholder="AR" value={newTranslation.ar} onChange={(e) => setNewTranslation((p) => ({ ...p, ar: e.target.value }))} />
+          <button type="button" onClick={upsertTranslation} className="bgl-btn-primary">
+            Ceviri kaydet
+          </button>
+          <ul className="max-h-80 space-y-2 overflow-y-auto rounded-xl border border-bgl-mist/80 bg-bgl-cream/30 p-3 text-sm">
+            {translations.slice(0, 40).map((t) => (
+              <li key={t.key} className="rounded-lg bg-white/90 px-3 py-2 ring-1 ring-black/5">
+                <span className="font-mono text-xs text-bgl-moss">{t.key}</span>
+                <span className="mt-1 block text-bgl-muted">{t.tr}</span>
+              </li>
             ))}
-          </div>
+          </ul>
         </section>
       ) : null}
     </main>
   );
 }
 
-function Card({ title, value }: { title: string; value: number }) {
+function StatCard({ title, value, accent }: { title: string; value: number; accent?: boolean }) {
   return (
-    <article className="rounded-xl border bg-white p-4">
-      <p className="text-sm text-slate-600">{title}</p>
-      <p className="text-2xl font-bold">{value}</p>
+    <article className={`bgl-card p-6 ${accent ? 'border-t-4 border-t-bgl-moss' : ''}`}>
+      <p className="text-xs font-semibold uppercase tracking-wide text-bgl-muted">{title}</p>
+      <p className="mt-2 text-3xl font-bold tracking-tight text-bgl-ink">{value}</p>
     </article>
   );
 }
