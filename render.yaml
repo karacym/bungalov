@@ -4,8 +4,8 @@ services:
     runtime: node
     rootDir: backend
     plan: free
-    buildCommand: npm install && npm run prisma:generate && npm run build
-    startCommand: npm run prisma:push && npm run start:prod
+    buildCommand: npm install && npm run prisma:generate && npm run build && npm run prisma:push
+    startCommand: npm run start:prod
     healthCheckPath: /api/bungalows
     autoDeploy: true
     envVars:
@@ -13,8 +13,6 @@ services:
         value: "20.18.1"
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: "10000"
       - key: FRONTEND_URL
         value: https://frontend-blush-three-90.vercel.app
       - key: JWT_SECRET

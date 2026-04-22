@@ -28,3 +28,8 @@ Tum endpointler ` /api ` prefix'i ile calisir.
 - Servis: `bungalov-backend`
 - Veritabani: `bungalov-db` (PostgreSQL)
 - Deploy sonrasi API URL formati: `https://<render-servis-adi>.onrender.com/api`
+
+### Deploy basarisiz olursa
+- `bungalov-backend` → **Logs** veya **Events** sekmesinden son 50 satiri kopyala (build mi runtime mi netlesir).
+- Uygulama `PORT` ortam degiskenini Render atar; sabit port kullanma.
+- Dinleme adresi: `0.0.0.0` (kodda ayarli).
