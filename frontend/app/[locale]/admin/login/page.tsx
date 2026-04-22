@@ -29,6 +29,9 @@ export default function AdminLoginPage({ params }: { params: { locale: string } 
   return (
     <main className="mx-auto max-w-md space-y-3 p-4">
       <h1 className="text-2xl font-bold">Admin Giris</h1>
+      <p className="text-xs text-slate-600">
+        Seed sonrasi: admin@savaskara.com / 123456
+      </p>
       <input className="w-full rounded border p-2" value={email} onChange={(e) => setEmail(e.target.value)} />
       <input type="password" className="w-full rounded border p-2" value={password} onChange={(e) => setPassword(e.target.value)} />
       <button onClick={login} className="w-full rounded bg-forest p-2 text-white">Giris Yap</button>

@@ -1,15 +1,37 @@
 {
   "nav": {
     "home": "Ana Sayfa",
+    "bungalows": "Bungalovlar",
     "contact": "Iletisim",
     "admin": "Yonetim"
   },
   "home": {
     "heroTitle": "Doganin kalbinde luks bungalovlar",
-    "heroSubtitle": "Sessizlik, konfor ve unutulmaz bir tatil deneyimi"
+    "heroSubtitle": "Sessizlik, konfor ve unutulmaz bir tatil deneyimi",
+    "featuredTitle": "One cikan bungalovlar",
+    "quickReserveTitle": "Hizli rezervasyon",
+    "whyTitle": "Neden bizi secmelisiniz?",
+    "galleryTitle": "Galeri",
+    "testimonialsTitle": "Misafir yorumlari",
+    "mapTitle": "Konumumuz",
+    "why1": "7/24 musteri destegi",
+    "why2": "Guvenli online odeme altyapisi",
+    "why3": "Onayli ve dogrulanmis tesisler",
+    "testimonial1": "Harika bir hafta sonu gecirdik, her sey kusursuzdu.",
+    "testimonial2": "Doga manzarasi ve konfor bir arada, kesinlikle tekrar geliriz.",
+    "testimonial3": "Ailemizle guvenle konaklayabilecegimiz bir yer.",
+    "author1": "Ayse K.",
+    "author2": "Mehmet T.",
+    "author3": "Zeynep A."
   },
   "cta": {
     "reserve": "Hemen Rezervasyon Yap",
-    "whatsapp": "WhatsApp"
+    "whatsapp": "WhatsApp",
+    "seeAll": "Tum bungalovlari gor"
+  },
+  "bungalow": {
+    "availabilityTitle": "Yaklasan musaitlik",
+    "galleryTitle": "Fotograf galerisi",
+    "reserveHint": "Rezervasyon icin once kayit olup giris yapmaniz gerekir (JWT)."
   }
 }

@@ -29,6 +29,12 @@ Tum endpointler ` /api ` prefix'i ile calisir.
 - Veritabani: `bungalov-db` (PostgreSQL)
 - Deploy sonrasi API URL formati: `https://<render-servis-adi>.onrender.com/api`
 
+### Ilk veri (seed)
+- Deploy sonrasi `startCommand` icinde `prisma db seed` calisir.
+- Admin: `admin@savaskara.com` / `123456`
+- Demo kullanici: `misafir@savaskara.com` / `123456`
+- Bos veritabaninda 3 demo bungalov ve 60 gunluk musaitlik kaydi olusturulur.
+
 ### Deploy basarisiz olursa
 - `bungalov-backend` → **Logs** veya **Events** sekmesinden son 50 satiri kopyala (build mi runtime mi netlesir).
 - Uygulama `PORT` ortam degiskenini Render atar; sabit port kullanma.

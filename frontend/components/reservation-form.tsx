@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export function ReservationForm({ bungalowId }: { bungalowId?: string }) {
+export function ReservationForm({ bungalowId, hint }: { bungalowId?: string; hint?: string }) {
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [status, setStatus] = useState<string | null>(null);
@@ -22,7 +22,8 @@ export function ReservationForm({ bungalowId }: { bungalowId?: string }) {
   }
 
   return (
-    <div className="space-y-2 rounded-xl border bg-white p-4">
+    <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
+      {hint ? <p className="text-xs text-slate-600">{hint}</p> : null}
       <input type="date" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} className="w-full rounded border p-2" />
       <input type="date" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} className="w-full rounded border p-2" />
       <button onClick={submit} className="w-full rounded bg-forest px-4 py-2 text-white">Rezerve Et</button>

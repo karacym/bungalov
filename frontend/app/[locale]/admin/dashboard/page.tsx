@@ -1,5 +1,6 @@
 'use client';
 
+import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 type Stats = { users: number; bungalows: number; reservations: number; paidReservations: number };
@@ -25,6 +26,8 @@ type ReservationResponse = {
 type Translation = { key: string; tr: string; en: string; ar: string };
 
 export default function AdminDashboardPage() {
+  const router = useRouter();
+  const params = useParams<{ locale: string }>();
   const [stats, setStats] = useState<Stats | null>(null);
   const [tab, setTab] = useState<Tab>('stats');
   const [bungalows, setBungalows] = useState<Bungalow[]>([]);
@@ -60,6 +63,12 @@ export default function AdminDashboardPage() {
   const [reservationTotalPages, setReservationTotalPages] = useState(1);
   const [reservationStatusFilter, setReservationStatusFilter] = useState<'all' | Reservation['status']>('all');
   const [reservationSearch, setReservationSearch] = useState('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !localStorage.getItem('token')) {
+      router.replace(`/${params.locale}/admin/login`);
+    }
+  }, [router, params.locale]);
 
   useEffect(() => {
     void refreshAll();

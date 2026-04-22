@@ -1,15 +1,37 @@
 {
   "nav": {
     "home": "الرئيسية",
+    "bungalows": "الاكواخ",
     "contact": "اتصل",
     "admin": "الادارة"
   },
   "home": {
     "heroTitle": "اكواخ فاخرة في قلب الطبيعة",
-    "heroSubtitle": "هدوء وراحة وتجربة اقامة لا تنسى"
+    "heroSubtitle": "هدوء وراحة وتجربة اقامة لا تنسى",
+    "featuredTitle": "اكواخ مميزة",
+    "quickReserveTitle": "حجز سريع",
+    "whyTitle": "لماذا نحن",
+    "galleryTitle": "المعرض",
+    "testimonialsTitle": "آراء الزوار",
+    "mapTitle": "موقعنا",
+    "why1": "دعم على مدار الساعة",
+    "why2": "دفع امن عبر الانترنت",
+    "why3": "منشآت موثقة",
+    "testimonial1": "قضينا عطلة رائعة، كل شيء كان ممتازا.",
+    "testimonial2": "منظر طبيعي وراحة معا، سنعود بالتأكيد.",
+    "testimonial3": "مكان آمن لاقامة عائلتنا.",
+    "author1": "عائشة ك.",
+    "author2": "محمد ت.",
+    "author3": "زينب ا."
   },
   "cta": {
     "reserve": "احجز الان",
-    "whatsapp": "واتساب"
+    "whatsapp": "واتساب",
+    "seeAll": "عرض كل الاكواخ"
+  },
+  "bungalow": {
+    "availabilityTitle": "التوفر القادم",
+    "galleryTitle": "معرض الصور",
+    "reserveHint": "يرجى التسجيل وتسجيل الدخول لاكمال الحجز."
   }
 }

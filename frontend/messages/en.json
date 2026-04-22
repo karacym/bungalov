@@ -1,15 +1,37 @@
 {
   "nav": {
     "home": "Home",
+    "bungalows": "Bungalows",
     "contact": "Contact",
     "admin": "Admin"
   },
   "home": {
     "heroTitle": "Luxury bungalows in nature",
-    "heroSubtitle": "Silence, comfort and unforgettable stays"
+    "heroSubtitle": "Silence, comfort and unforgettable stays",
+    "featuredTitle": "Featured bungalows",
+    "quickReserveTitle": "Quick reservation",
+    "whyTitle": "Why choose us",
+    "galleryTitle": "Gallery",
+    "testimonialsTitle": "Guest reviews",
+    "mapTitle": "Our location",
+    "why1": "24/7 customer support",
+    "why2": "Secure online payments",
+    "why3": "Verified properties",
+    "testimonial1": "We had a perfect weekend, everything was flawless.",
+    "testimonial2": "Nature views and comfort together, we will return.",
+    "testimonial3": "A safe place for our family stay.",
+    "author1": "Ayse K.",
+    "author2": "Mehmet T.",
+    "author3": "Zeynep A."
   },
   "cta": {
     "reserve": "Book Now",
-    "whatsapp": "WhatsApp"
+    "whatsapp": "WhatsApp",
+    "seeAll": "See all bungalows"
+  },
+  "bungalow": {
+    "availabilityTitle": "Upcoming availability",
+    "galleryTitle": "Photo gallery",
+    "reserveHint": "Please register and sign in (JWT) to complete a reservation."
   }
 }

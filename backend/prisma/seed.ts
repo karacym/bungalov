@@ -1,0 +1,104 @@
+import { PrismaClient, UserRole } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
+
+const prisma = new PrismaClient();
+
+const DEMO_IMAGES = [
+  'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=1200&q=80',
+  'https://images.unsplash.com/photo-1518780664699-7e3d4ca20947?w=1200&q=80',
+  'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80',
+];
+
+async function main() {
+  const adminPassword = await bcrypt.hash('123456', 10);
+  await prisma.user.upsert({
+    where: { email: 'admin@savaskara.com' },
+    update: { password: adminPassword, role: UserRole.admin, name: 'Yonetici' },
+    create: {
+      email: 'admin@savaskara.com',
+      name: 'Yonetici',
+      password: adminPassword,
+      role: UserRole.admin,
+    },
+  });
+
+  const demoUserPassword = await bcrypt.hash('123456', 10);
+  await prisma.user.upsert({
+    where: { email: 'misafir@savaskara.com' },
+    update: {},
+    create: {
+      email: 'misafir@savaskara.com',
+      name: 'Misafir',
+      password: demoUserPassword,
+      role: UserRole.user,
+    },
+  });
+
+  const existing = await prisma.bungalow.count();
+  if (existing === 0) {
+    const b1 = await prisma.bungalow.create({
+      data: {
+        title: 'Gol Kenari Premium Bungalov',
+        description:
+          'Dogayla ic ice, genis veranda ve jakuzili modern bungalov. Sabah kahvaltisi dahildir.',
+        pricePerNight: 4500,
+        location: 'Sapanca, Sakarya',
+        images: DEMO_IMAGES,
+        features: { wifi: true, jakuzi: true, kahvalti: true, maxMisafir: 4 },
+      },
+    });
+    const b2 = await prisma.bungalow.create({
+      data: {
+        title: 'Orman Evi Bungalov',
+        description:
+          'Cam agaclarinin altinda sessiz konaklama. Barbeku alani ve yangin cemberi.',
+        pricePerNight: 3200,
+        location: 'Abant, Bolu',
+        images: [DEMO_IMAGES[1], DEMO_IMAGES[0]],
+        features: { wifi: true, barbeku: true, maxMisafir: 6 },
+      },
+    });
+    const b3 = await prisma.bungalow.create({
+      data: {
+        title: 'Dag Manzarali Suite',
+        description: 'Genis cam cephe ve panoramik dag manzarasi. Balayi icin ideal.',
+        pricePerNight: 5800,
+        location: 'Uludag, Bursa',
+        images: [DEMO_IMAGES[2], DEMO_IMAGES[1], DEMO_IMAGES[0]],
+        features: { wifi: true, somine: true, maxMisafir: 2 },
+      },
+    });
+
+    const start = new Date();
+    start.setUTCHours(12, 0, 0, 0);
+    for (const bungalow of [b1, b2, b3]) {
+      for (let d = 0; d < 60; d++) {
+        const date = new Date(start);
+        date.setUTCDate(date.getUTCDate() + d);
+        await prisma.availability.create({
+          data: { bungalowId: bungalow.id, date, isAvailable: true },
+        });
+      }
+    }
+  }
+
+  const translations = [
+    { key: 'nav.bungalows', tr: 'Bungalovlar', en: 'Bungalows', ar: 'الاكواخ' },
+    { key: 'footer.rights', tr: 'Tum haklari saklidir.', en: 'All rights reserved.', ar: 'جميع الحقوق محفوظة.' },
+  ];
+  for (const row of translations) {
+    await prisma.translation.upsert({
+      where: { key: row.key },
+      update: { tr: row.tr, en: row.en, ar: row.ar },
+      create: row,
+    });
+  }
+}
+
+main()
+  .then(() => prisma.$disconnect())
+  .catch(async (e) => {
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });
