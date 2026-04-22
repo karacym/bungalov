@@ -22,3 +22,9 @@ Tum endpointler ` /api ` prefix'i ile calisir.
 ## Admin Reservations Query
 - `GET /api/admin/reservations?page=1&limit=10`
 - Opsiyonel filtreler: `status=pending|paid|cancelled`, `search=<email veya bungalow>`
+
+## Render Deploy
+- Repo kokundeki `render.yaml` dosyasi ile Blueprint olustur.
+- Servis: `bungalov-backend`
+- Veritabani: `bungalov-db` (PostgreSQL)
+- Deploy sonrasi API URL formati: `https://<render-servis-adi>.onrender.com/api`
