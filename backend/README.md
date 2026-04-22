@@ -33,3 +33,4 @@ Tum endpointler ` /api ` prefix'i ile calisir.
 - `bungalov-backend` → **Logs** veya **Events** sekmesinden son 50 satiri kopyala (build mi runtime mi netlesir).
 - Uygulama `PORT` ortam degiskenini Render atar; sabit port kullanma.
 - Dinleme adresi: `0.0.0.0` (kodda ayarli).
+- `prisma db push` build asamasinda calismaz (Render build ortaminda DB baglantisi bazen basarisiz olur); sema senkronu **start** sirasinda yapilir.
