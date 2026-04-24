@@ -1,67 +1,128 @@
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
+import type { SiteBranding } from '@/lib/site-branding';
 
-export function SiteFooter({ locale }: { locale: string }) {
+function waHref(raw: string | undefined | null) {
+  const t = (raw ?? '').trim();
+  if (!t) return 'https://wa.me/905000000000';
+  if (t.startsWith('http')) return t;
+  const digits = t.replace(/\D/g, '');
+  if (!digits) return 'https://wa.me/905000000000';
+  return `https://wa.me/${digits}`;
+}
+
+function socialHref(kind: 'ig' | 'fb', raw: string | undefined | null) {
+  const v = (raw ?? '').trim();
+  if (!v) return '';
+  if (v.startsWith('http')) return v;
+  if (kind === 'ig') return `https://www.instagram.com/${v.replace(/^@/, '').replace(/\/$/, '')}/`;
+  return `https://www.facebook.com/${v.replace(/^\//, '')}`;
+}
+
+export async function SiteFooter({ locale, branding }: { locale: string; branding: SiteBranding }) {
+  const tNav = await getTranslations({ locale, namespace: 'nav' });
+  const tCta = await getTranslations({ locale, namespace: 'cta' });
+  const tFoot = await getTranslations({ locale, namespace: 'footer' });
+
+  const siteTitle = branding.siteName?.trim() || 'Bungalov';
+  const tagline = branding.footerTagline?.trim() || tFoot('defaultTagline');
+  const phone = branding.contactPhone?.trim() || '+90 500 000 00 00';
+  const email = branding.contactEmail?.trim() || 'info@savaskara.com';
+  const locations = branding.footerLocations?.trim() || 'Sapanca · Bolu · Bursa';
+  const ig = socialHref('ig', branding.instagram);
+  const fb = socialHref('fb', branding.facebook);
+
   return (
     <footer className="mt-auto border-t border-bgl-mist/80 bg-bgl-mossDark text-bgl-cream">
       <div className="bgl-container grid gap-10 py-14 md:grid-cols-12">
         <div className="md:col-span-5">
-          <p className="text-lg font-semibold tracking-tight">Bungalov</p>
-          <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/75">
-            Doganin icinde, sade cizgilerle tasarlanmis bungalov deneyimi. Sessizlik, konfor ve guvenli rezervasyon.
-          </p>
+          <p className="text-lg font-semibold tracking-tight">{siteTitle}</p>
+          <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/75">{tagline}</p>
           <div className="mt-6 flex flex-wrap gap-3">
             <a
-              href="https://wa.me/905000000000"
+              href={waHref(branding.whatsapp)}
+              target="_blank"
+              rel="noreferrer"
               className="rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white ring-1 ring-white/20 transition hover:bg-white/20"
             >
-              WhatsApp
+              {tCta('whatsapp')}
             </a>
             <Link
               href={`/${locale}/bungalows`}
               className="rounded-full bg-bgl-moss px-4 py-2 text-xs font-semibold text-white ring-1 ring-white/10 transition hover:bg-white/10"
             >
-              Rezervasyon
+              {tCta('reserve')}
             </Link>
+            {ig ? (
+              <a
+                href={ig}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white ring-1 ring-white/20 transition hover:bg-white/20"
+              >
+                {tFoot('instagram')}
+              </a>
+            ) : null}
+            {fb ? (
+              <a
+                href={fb}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white ring-1 ring-white/20 transition hover:bg-white/20"
+              >
+                {tFoot('facebook')}
+              </a>
+            ) : null}
           </div>
         </div>
         <div className="grid gap-8 sm:grid-cols-2 md:col-span-4 md:col-start-8">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-white/50">Gezin</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-white/50">{tFoot('browse')}</p>
             <ul className="mt-4 space-y-2 text-sm text-white/85">
               <li>
                 <Link href={`/${locale}`} className="hover:text-white">
-                  Ana Sayfa
+                  {tNav('home')}
                 </Link>
               </li>
               <li>
                 <Link href={`/${locale}/bungalows`} className="hover:text-white">
-                  Bungalovlar
+                  {tNav('bungalows')}
                 </Link>
               </li>
               <li>
                 <Link href={`/${locale}/contact`} className="hover:text-white">
-                  Iletisim
+                  {tNav('contact')}
                 </Link>
               </li>
               <li>
                 <Link href={`/${locale}/admin/login`} className="hover:text-white">
-                  Yonetim
+                  {tNav('admin')}
                 </Link>
               </li>
             </ul>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-white/50">Iletisim</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-white/50">{tNav('contact')}</p>
             <ul className="mt-4 space-y-2 text-sm text-white/85">
-              <li>+90 500 000 00 00</li>
-              <li>info@savaskara.com</li>
-              <li className="pt-2 text-xs text-white/50">Sapanca · Bolu · Bursa</li>
+              <li>
+                <a href={`tel:${phone.replace(/\D/g, '')}`} className="hover:text-white">
+                  {phone}
+                </a>
+              </li>
+              <li>
+                <a href={`mailto:${email}`} className="hover:text-white">
+                  {email}
+                </a>
+              </li>
+              <li className="pt-2 text-xs text-white/50">{locations}</li>
             </ul>
           </div>
         </div>
       </div>
       <div className="border-t border-white/10 py-6">
-        <p className="bgl-container text-center text-xs text-white/45">© {new Date().getFullYear()} Bungalov · Tum haklari saklidir.</p>
+        <p className="bgl-container text-center text-xs text-white/45">
+          © {new Date().getFullYear()} {siteTitle} · {tFoot('rightsReserved')}
+        </p>
       </div>
     </footer>
   );

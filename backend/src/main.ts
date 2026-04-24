@@ -2,17 +2,31 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { existsSync, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { static as expressStatic } from 'express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+  const frontendRaw = configService.get<string>('FRONTEND_URL', 'http://localhost:3000');
+  const origins = frontendRaw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
   app.enableCors({
-    origin: configService.get<string>('FRONTEND_URL', '*'),
+    origin: origins.length > 1 ? origins : origins[0] ?? true,
     credentials: true,
   });
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+
+  const uploadsDir = join(process.cwd(), 'uploads');
+  if (!existsSync(uploadsDir)) {
+    mkdirSync(uploadsDir, { recursive: true });
+  }
+  app.use('/uploads', expressStatic(uploadsDir));
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Bungalov API')

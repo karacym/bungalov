@@ -72,6 +72,29 @@ async function main() {
     const start = new Date();
     start.setUTCHours(12, 0, 0, 0);
     for (const bungalow of [b1, b2, b3]) {
+      await prisma.room.createMany({
+        data: [
+          {
+            bungalowId: bungalow.id,
+            name: 'Standart Oda',
+            description: 'Bahce manzarali, cift kisilik yatakli.',
+            capacity: 2,
+            pricePerNight: 0,
+            images: bungalow.images,
+            features: { klima: true, minibar: true },
+          },
+          {
+            bungalowId: bungalow.id,
+            name: 'Aile Odasi',
+            description: 'Ek yatakli, cocuklu aileler icin uygun.',
+            capacity: 4,
+            pricePerNight: 0,
+            images: bungalow.images,
+            features: { klima: true, cocukYatagi: true },
+          },
+        ],
+      });
+
       for (let d = 0; d < 60; d++) {
         const date = new Date(start);
         date.setUTCDate(date.getUTCDate() + d);
@@ -79,6 +102,24 @@ async function main() {
           data: { bungalowId: bungalow.id, date, isAvailable: true },
         });
       }
+    }
+  }
+
+  const allBungalows = await prisma.bungalow.findMany({ select: { id: true, images: true } });
+  for (const bungalow of allBungalows) {
+    const roomCount = await prisma.room.count({ where: { bungalowId: bungalow.id } });
+    if (roomCount === 0) {
+      await prisma.room.create({
+        data: {
+          bungalowId: bungalow.id,
+          name: 'Standart Oda',
+          description: 'Varsayilan oda kaydi',
+          capacity: 2,
+          pricePerNight: 0,
+          images: bungalow.images,
+          features: { klima: true },
+        },
+      });
     }
   }
 
@@ -91,6 +132,45 @@ async function main() {
       where: { key: row.key },
       update: { tr: row.tr, en: row.en, ar: row.ar },
       create: row,
+    });
+  }
+
+  await prisma.adminSetting.upsert({
+    where: { key: 'operations' },
+    update: {
+      value: {
+        logoUrl: '',
+        supportPhone: '',
+        supportEmail: '',
+        mapEmbedUrl: '',
+        googlePlaceId: '',
+        checkInTime: '14:00',
+        checkOutTime: '11:00',
+      },
+    },
+    create: {
+      key: 'operations',
+      value: {
+        logoUrl: '',
+        supportPhone: '',
+        supportEmail: '',
+        mapEmbedUrl: '',
+        googlePlaceId: '',
+        checkInTime: '14:00',
+        checkOutTime: '11:00',
+      },
+    },
+  });
+
+  for (const provider of ['iyzico', 'stripe', 'paytr']) {
+    await prisma.paymentProviderSetting.upsert({
+      where: { provider },
+      update: {},
+      create: {
+        provider,
+        enabled: provider === 'iyzico',
+        mode: 'test',
+      },
     });
   }
 }

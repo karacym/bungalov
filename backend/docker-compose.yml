@@ -1,0 +1,20 @@
+# Yerel gelistirme: mevcut PostgreSQL (5432) ile cakismasin diye 5433
+# Calistir: cd backend && docker compose up -d
+# Sonra .env icinde:
+# DATABASE_URL="postgresql://postgres:postgres@localhost:5433/bungalov"
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: bungalov
+    ports:
+      - '5433:5432'
+    volumes:
+      - bungalov_pg_data:/var/lib/postgresql/data
+
+volumes:
+  bungalov_pg_data:

@@ -12,6 +12,34 @@
 - PORT
 - JWT_SECRET
 - FRONTEND_URL
+- BACKEND_URL
+- IYZICO_ENABLED
+- IYZICO_MODE
+- IYZICO_API_KEY
+- IYZICO_SECRET_KEY
+
+## Iyzico Sandbox Odeme
+Gercek odeme akisina en yakin test icin Iyzico sandbox kullanilir.
+
+1. Iyzico sandbox hesabindan API anahtarlarini al.
+2. `.env` icine su alanlari doldur:
+   - `IYZICO_ENABLED=true`
+   - `IYZICO_MODE=test`
+   - `IYZICO_API_KEY=...`
+   - `IYZICO_SECRET_KEY=...`
+   - `BACKEND_URL=http://localhost:4000`
+3. Frontendde rezervasyon adiminda `Simdi Ode` ile islem baslat.
+4. Sistem Iyzico checkout sayfasina yonlendirir.
+5. Odeme sonucu callback ile reservation/payment kayitlari otomatik guncellenir.
+
+## Windows / Yerel PostgreSQL (P1000 sifre hatasi)
+1. **pgAdmin** ile `localhost` sunucusuna baglan (kurulumda belirledigin `postgres` sifresi).
+2. **Query Tool** acip `scripts/init-bungalov-db.sql` dosyasini calistir (sifreyi `postgres` yapar, `bungalov` veritabanini olusturur). `CREATE DATABASE` zaten varsa hatayi yoksay.
+3. `.env` icinde `DATABASE_URL` bu sifreyle uyumlu olsun: `postgresql://postgres:postgres@localhost:5432/bungalov`
+4. Tek komut: `npm run db:setup` (generate + push + seed).
+
+### Docker (istege bagli, 5433 portu)
+Makinede Docker varsa ve yerel 5432 sifresini degistirmek istemiyorsan: `cd backend && npm run db:docker` sonra `.env` icinde `...@localhost:5433/bungalov` kullan, ardindan `npm run db:setup`.
 
 ## API Prefix
 Tum endpointler ` /api ` prefix'i ile calisir.

@@ -1,9 +1,12 @@
 'use client';
 
+import { getApiBaseUrl } from '@/lib/api';
 import { useParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 export default function AdminLoginPage() {
+  const t = useTranslations('adminLogin');
   const params = useParams<{ locale: string }>();
   const [email, setEmail] = useState('admin@savaskara.com');
   const [password, setPassword] = useState('123456');
@@ -11,14 +14,22 @@ export default function AdminLoginPage() {
   const router = useRouter();
 
   async function login() {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
+    setError('');
+    const base = getApiBaseUrl();
+    let response: Response;
+    try {
+      response = await fetch(`${base}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+    } catch {
+      setError(t('errorNetwork'));
+      return;
+    }
 
     if (!response.ok) {
-      setError('Giris basarisiz');
+      setError(t('errorAuth'));
       return;
     }
 
@@ -30,16 +41,16 @@ export default function AdminLoginPage() {
   return (
     <main className="bgl-container flex min-h-[70vh] max-w-md flex-col justify-center py-12">
       <div className="rounded-[1.75rem] border border-bgl-mist bg-white p-8 shadow-card">
-        <p className="bgl-section-title">Yonetim</p>
-        <h1 className="bgl-heading mt-2">Admin giris</h1>
-        <p className="mt-2 text-xs text-bgl-muted">Seed sonrasi: admin@savaskara.com / 123456</p>
+        <p className="bgl-section-title">{t('eyebrow')}</p>
+        <h1 className="bgl-heading mt-2">{t('title')}</h1>
+        <p className="mt-2 text-xs text-bgl-muted">{t('hint')}</p>
         <div className="mt-8 space-y-4">
           <label className="block text-xs font-medium text-bgl-muted">
-            E-posta
+            {t('email')}
             <input className="bgl-input mt-1.5" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
           </label>
           <label className="block text-xs font-medium text-bgl-muted">
-            Sifre
+            {t('password')}
             <input
               type="password"
               className="bgl-input mt-1.5"
@@ -49,7 +60,7 @@ export default function AdminLoginPage() {
             />
           </label>
           <button type="button" onClick={login} className="bgl-btn-primary w-full">
-            Giris yap
+            {t('submit')}
           </button>
           {error ? <p className="text-center text-sm font-medium text-red-600">{error}</p> : null}
         </div>

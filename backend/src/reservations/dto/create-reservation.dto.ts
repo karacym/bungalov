@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsDateString, IsNotEmpty, IsString } from 'class-validator';
+import { IsDateString, IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateReservationDto {
   @IsString()
@@ -13,4 +13,10 @@ export class CreateReservationDto {
   @IsDateString()
   @Type(() => String)
   checkOut: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  guests?: number;
 }

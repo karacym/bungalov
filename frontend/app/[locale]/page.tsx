@@ -3,23 +3,24 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getBungalows } from '@/lib/api';
 import { ReservationForm } from '@/components/reservation-form';
-
-const HERO_BG =
-  'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&q=80';
+import { HeroBackgroundSlider } from '@/components/home/hero-background-slider';
+import { HomeMapSection } from '@/components/home/home-map-section';
+import { DEFAULT_HOME_HERO_IMAGES } from '@/lib/site-pages-config';
 
 const GALLERY = [
   'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80',
   'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=1200&q=80',
-  'https://images.unsplash.com/photo-1518780664699-7e3d4ca20947?w=1200&q=80',
+  'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1200&q=80',
   'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=1200&q=80',
   'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=1200&q=80',
   'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=1200&q=80',
 ];
 
 export async function generateMetadata({ params }: { params: { locale: string } }) {
+  const t = await getTranslations({ locale: params.locale, namespace: 'meta' });
   return {
-    title: `Bungalov | ${params.locale.toUpperCase()}`,
-    description: 'Luks bungalov kiralama — doga, konfor ve guvenli rezervasyon.',
+    title: t('homeTitle', { locale: params.locale.toUpperCase() }),
+    description: t('homeDescription'),
   };
 }
 
@@ -32,19 +33,21 @@ export default async function HomePage({ params }: { params: { locale: string } 
   const t = await getTranslations('home');
   const tc = await getTranslations('cta');
   const tb = await getTranslations('bungalow');
-  const bungalows = await getBungalows().catch(() => []);
+  const ts = await getTranslations('search');
+  const tCommon = await getTranslations({ locale: params.locale, namespace: 'common' });
+  const bungalows = await getBungalows();
 
   return (
     <main className="pb-16">
       <section className="bgl-container pt-6 md:pt-10">
         <div className="relative overflow-hidden rounded-[2rem] text-white shadow-card ring-1 ring-black/5">
-          <div className="absolute inset-0">
-            <Image src={HERO_BG} alt="" fill className="object-cover" priority sizes="(max-width:768px) 100vw, 1152px" />
-            <div className="absolute inset-0 bg-gradient-to-br from-bgl-ink/85 via-bgl-mossDark/55 to-bgl-moss/35" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(255,255,255,0.12),_transparent_55%)]" />
-          </div>
+          <HeroBackgroundSlider fallbackImages={DEFAULT_HOME_HERO_IMAGES} />
           <div className="relative flex flex-col gap-6 px-6 py-16 md:px-12 md:py-24">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/80">{t('heroEyebrow')} · Bungalov</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/80">
+              {t('heroEyebrow')}
+              {t('heroBrandSep')}
+              {t('heroBrandName')}
+            </p>
             <h1 className="max-w-2xl text-3xl font-bold leading-tight tracking-tight md:text-5xl md:leading-[1.1]">
               {t('heroTitle')}
             </h1>
@@ -61,10 +64,21 @@ export default async function HomePage({ params }: { params: { locale: string } 
         </div>
       </section>
 
+      <section className="bgl-container mt-6 md:mt-8">
+        <div className="rounded-[2rem] border border-bgl-mist/90 bg-white/95 p-6 shadow-soft md:p-8">
+          <p className="bgl-section-title">{t('bookingEyebrow')}</p>
+          <h2 className="bgl-heading mt-2">{t('quickReserveTitle')}</h2>
+          <p className="mt-2 text-sm text-bgl-muted">{tc('reserve')}</p>
+          <div className="mt-5">
+            <ReservationForm hint={ts('resultsSubtitle')} locale={params.locale} />
+          </div>
+        </div>
+      </section>
+
       <section className="bgl-container mt-16 md:mt-24">
         <p className="bgl-section-title">{t('collectionEyebrow')}</p>
         <h2 className="bgl-heading mt-2">{t('featuredTitle')}</h2>
-        <p className="mt-2 max-w-2xl text-sm text-bgl-muted md:text-base">Secilmis bungalovlarimiz; her biri dogayla uyumlu, modern ve misafir odakli.</p>
+        <p className="mt-2 max-w-2xl text-sm text-bgl-muted md:text-base">{t('featuredIntro')}</p>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {bungalows.slice(0, 3).map((item) => (
             <article key={item.id} className="group bgl-card transition hover:-translate-y-0.5 hover:shadow-card">
@@ -78,11 +92,13 @@ export default async function HomePage({ params }: { params: { locale: string } 
                     sizes="(max-width:768px) 100vw, 33vw"
                   />
                 ) : (
-                  <div className="flex h-full items-center justify-center text-bgl-muted">Gorsel yakinda</div>
+                  <div className="flex h-full items-center justify-center text-bgl-muted">{t('imagePlaceholder')}</div>
                 )}
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-bgl-ink/80 to-transparent p-4 pt-12">
                   <p className="text-xs text-white/80">{item.location}</p>
-                  <p className="text-sm font-semibold text-white">{formatPrice(item.pricePerNight)} TL / gece</p>
+                  <p className="text-sm font-semibold text-white">
+                    {t('priceLine', { amount: formatPrice(item.pricePerNight), perNight: ts('perNight') })}
+                  </p>
                 </div>
               </div>
               <div className="p-5">
@@ -91,7 +107,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
                   href={`/${params.locale}/bungalows/${item.id}`}
                   className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-bgl-moss hover:text-bgl-mossDark"
                 >
-                  Detaylari gor
+                  {ts('viewDetails')}
                   <span aria-hidden>→</span>
                 </Link>
               </div>
@@ -101,27 +117,17 @@ export default async function HomePage({ params }: { params: { locale: string } 
       </section>
 
       <section className="bgl-container mt-16 md:mt-24">
-        <div className="grid gap-8 rounded-[2rem] border border-bgl-mist/90 bg-white/90 p-6 shadow-soft md:grid-cols-2 md:p-10">
-          <div>
-            <p className="bgl-section-title">{t('bookingEyebrow')}</p>
-            <h2 className="bgl-heading mt-2">{t('quickReserveTitle')}</h2>
-            <p className="mt-2 text-sm text-bgl-muted">{tc('reserve')}</p>
-            <div className="mt-6">
-              <ReservationForm hint={tb('reserveHint')} />
-            </div>
-          </div>
-          <div className="flex flex-col justify-center rounded-2xl bg-bgl-cream/80 p-6 ring-1 ring-bgl-mist/80 md:p-8">
-            <p className="bgl-section-title">{t('whyBlockEyebrow')}</p>
-            <h2 className="bgl-heading mt-2">{t('whyTitle')}</h2>
-            <ul className="mt-6 space-y-4 text-sm text-bgl-muted md:text-base">
-              {[t('why1'), t('why2'), t('why3')].map((line) => (
-                <li key={line} className="flex gap-3">
-                  <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-bgl-moss" />
-                  <span>{line}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+        <div className="flex flex-col justify-center rounded-[2rem] bg-bgl-cream/80 p-6 ring-1 ring-bgl-mist/80 md:p-10">
+          <p className="bgl-section-title">{t('whyBlockEyebrow')}</p>
+          <h2 className="bgl-heading mt-2">{t('whyTitle')}</h2>
+          <ul className="mt-6 space-y-4 text-sm text-bgl-muted md:text-base">
+            {[t('why1'), t('why2'), t('why3')].map((line) => (
+              <li key={line} className="flex gap-3">
+                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-bgl-moss" />
+                <span>{line}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
@@ -167,20 +173,13 @@ export default async function HomePage({ params }: { params: { locale: string } 
       <section className="bgl-container mt-16 md:mt-24">
         <p className="bgl-section-title">{t('mapEyebrow')}</p>
         <h2 className="bgl-heading mt-2">{t('mapTitle')}</h2>
-        <div className="mt-10 overflow-hidden rounded-[2rem] border border-bgl-mist bg-white shadow-soft ring-1 ring-black/5">
-          <iframe
-            title="map"
-            className="h-80 w-full md:h-96"
-            src="https://maps.google.com/maps?q=Sapanca+Turkey&t=&z=9&ie=UTF8&iwloc=&output=embed"
-            loading="lazy"
-          />
-        </div>
+        <HomeMapSection />
       </section>
 
       <a
         href="https://wa.me/905000000000"
         className="fixed bottom-5 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg ring-2 ring-white/80 transition hover:scale-105 md:bottom-8 md:right-8"
-        aria-label="WhatsApp"
+        aria-label={tCommon('a11yWhatsApp')}
       >
         <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />

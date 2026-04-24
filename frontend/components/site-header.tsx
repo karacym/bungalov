@@ -1,11 +1,33 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { MobileMenu } from '@/components/mobile-menu';
 
 const LOCALES = ['tr', 'en', 'ar'] as const;
 
 type NavLabels = { home: string; bungalows: string; contact: string };
 
-export function SiteHeader({ locale, labels }: { locale: string; labels: NavLabels }) {
+type MobileA11y = { menu: string; closeMenu: string };
+
+type SiteHeaderBranding = {
+  siteName: string;
+  logoUrl: string;
+};
+
+export function SiteHeader({
+  locale,
+  labels,
+  branding,
+  mobileA11y,
+}: {
+  locale: string;
+  labels: NavLabels;
+  branding?: SiteHeaderBranding;
+  mobileA11y: MobileA11y;
+}) {
+  const siteName = branding?.siteName?.trim() || 'Bungalov';
+  const logoUrl = branding?.logoUrl?.trim() ?? '';
+  const initial = siteName.charAt(0).toUpperCase() || 'B';
+
   return (
     <header className="sticky top-0 z-40 border-b border-bgl-mist/70 bg-bgl-cream/85 backdrop-blur-md">
       <nav className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 md:py-4">
@@ -13,10 +35,23 @@ export function SiteHeader({ locale, labels }: { locale: string; labels: NavLabe
           href={`/${locale}`}
           className="group flex items-center gap-2 font-semibold tracking-tight text-bgl-moss"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-bgl-moss text-sm text-white shadow-sm ring-1 ring-bgl-moss/20">
-            B
-          </span>
-          <span className="text-lg transition-colors group-hover:text-bgl-mossDark md:text-xl">Bungalov</span>
+          {logoUrl ? (
+            <span className="relative flex h-9 w-9 shrink-0 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-bgl-moss/15">
+              <Image
+                src={logoUrl}
+                alt=""
+                fill
+                className="object-contain p-0.5"
+                sizes="36px"
+                unoptimized={logoUrl.endsWith('.svg')}
+              />
+            </span>
+          ) : (
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-bgl-moss text-sm text-white shadow-sm ring-1 ring-bgl-moss/20">
+              {initial}
+            </span>
+          )}
+          <span className="text-lg transition-colors group-hover:text-bgl-mossDark md:text-xl">{siteName}</span>
         </Link>
 
         <div className="hidden items-center gap-1 rounded-full border border-bgl-mist bg-white/70 p-1 md:flex">
@@ -54,7 +89,7 @@ export function SiteHeader({ locale, labels }: { locale: string; labels: NavLabe
               </Link>
             ))}
           </div>
-          <MobileMenu locale={locale} labels={labels} />
+          <MobileMenu locale={locale} labels={labels} a11y={mobileA11y} />
         </div>
       </nav>
     </header>
