@@ -368,8 +368,9 @@ export function useAdminData() {
       setBungalows(
         bungalowsPayload.map((item) => ({
           ...item,
-          icalExportToken: (item as { icalExportToken?: string | null }).icalExportToken ?? null,
-          externalIcalUrl: (item as { externalIcalUrl?: string | null }).externalIcalUrl ?? '',
+        icalExportToken: (item as { icalExportToken?: string | null }).icalExportToken ?? null,
+        externalIcalUrl: (item as { externalIcalUrl?: string | null }).externalIcalUrl ?? '',
+        googlePlaceId: (item as { googlePlaceId?: string | null }).googlePlaceId ?? null,
           capacity: Number((item.features as Record<string, unknown>)?.maxGuests ?? 2),
           images: (item.images ?? []).map((image) => toAbsoluteMediaUrl(String(image))),
           features: (item.features ?? {}) as Bungalow['features'],
@@ -480,6 +481,7 @@ export function useAdminData() {
           location: payload.location,
           images: payload.images.map((image) => toRelativeMediaUrl(String(image))),
           features,
+          googlePlaceId: payload.googlePlaceId?.trim() ? payload.googlePlaceId.trim() : null,
         }),
       });
       const created = (await response.json()) as Bungalow & { features?: Record<string, unknown> };
@@ -490,6 +492,7 @@ export function useAdminData() {
         features: (created.features ?? {}) as Bungalow['features'],
         icalExportToken: (created as { icalExportToken?: string | null }).icalExportToken ?? null,
         externalIcalUrl: (created as { externalIcalUrl?: string | null }).externalIcalUrl ?? '',
+        googlePlaceId: (created as { googlePlaceId?: string | null }).googlePlaceId ?? null,
       };
       setBungalows((prev) => [mapped, ...prev]);
       return mapped;
@@ -512,6 +515,7 @@ export function useAdminData() {
           location: payload.location,
           images: payload.images.map((image) => toRelativeMediaUrl(String(image))),
           features,
+          googlePlaceId: payload.googlePlaceId?.trim() ? payload.googlePlaceId.trim() : null,
         }),
       });
       const updated = (await response.json()) as Bungalow & { features?: Record<string, unknown> };
@@ -522,6 +526,7 @@ export function useAdminData() {
         features: (updated.features ?? {}) as Bungalow['features'],
         icalExportToken: (updated as { icalExportToken?: string | null }).icalExportToken ?? null,
         externalIcalUrl: (updated as { externalIcalUrl?: string | null }).externalIcalUrl ?? '',
+        googlePlaceId: (updated as { googlePlaceId?: string | null }).googlePlaceId ?? null,
       };
       setBungalows((prev) => prev.map((item) => (item.id === id ? mapped : item)));
       return mapped;
@@ -798,6 +803,7 @@ export function useAdminData() {
         features: (updated.features ?? {}) as Bungalow['features'],
         icalExportToken: updated.icalExportToken ?? null,
         externalIcalUrl: updated.externalIcalUrl ?? '',
+        googlePlaceId: (updated as { googlePlaceId?: string | null }).googlePlaceId ?? null,
       };
       setBungalows((prev) => prev.map((b) => (b.id === bungalowId ? mapped : b)));
       return mapped;
@@ -843,6 +849,13 @@ export function useAdminData() {
       error?: string;
     }>;
   }, [authFetch]);
+
+  const syncGoogleReviews = useCallback(
+    async (bungalowId: string) => {
+      await authFetch(`/admin/bungalows/${bungalowId}/google-reviews/sync`, { method: 'POST' });
+    },
+    [authFetch],
+  );
 
   const fetchCalendarEvents = useCallback(
     async (bungalowId: string, from: string, to: string) => {
@@ -935,5 +948,6 @@ export function useAdminData() {
     rotateIcalToken,
     syncCalendars,
     fetchCalendarEvents,
+    syncGoogleReviews,
   };
 }

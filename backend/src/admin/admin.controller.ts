@@ -23,6 +23,7 @@ import { BlogService } from '../blog/blog.service';
 import { CreateBlogPostDto } from '../blog/dto/create-blog-post.dto';
 import { UpdateBlogPostDto } from '../blog/dto/update-blog-post.dto';
 import { CalendarSyncService } from '../calendar/calendar-sync.service';
+import { GoogleMapsService } from '../google-maps/google-maps.service';
 import { AdminService } from './admin.service';
 import { TestEmailDto, UpdateEmailSettingsDto } from './dto/update-email-settings.dto';
 import { ContactService } from '../contact/contact.service';
@@ -40,6 +41,7 @@ export class AdminController {
     private readonly contactService: ContactService,
     private readonly blogService: BlogService,
     private readonly calendarSync: CalendarSyncService,
+    private readonly googleMaps: GoogleMapsService,
   ) {}
 
   @Get('stats')
@@ -62,6 +64,7 @@ export class AdminController {
       location: string;
       images: string[];
       features: Record<string, unknown>;
+      googlePlaceId?: string | null;
     },
   ) {
     return this.adminService.createBungalow(body);
@@ -108,9 +111,15 @@ export class AdminController {
       location: string;
       images: string[];
       features: Record<string, unknown>;
+      googlePlaceId: string | null;
     }>,
   ) {
     return this.adminService.updateBungalow(id, body);
+  }
+
+  @Post('bungalows/:id/google-reviews/sync')
+  syncGoogleReviews(@Param('id') id: string) {
+    return this.googleMaps.syncReviewsForBungalow(id);
   }
 
   @Delete('bungalows/:id')

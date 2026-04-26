@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsNumber, IsObject, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString } from 'class-validator';
 
 export class CreateBungalowDto {
   @IsString()
@@ -19,4 +19,8 @@ export class CreateBungalowDto {
 
   @IsObject()
   features: Record<string, unknown>;
+
+  @IsOptional()
+  @IsString()
+  googlePlaceId?: string | null;
 }

@@ -25,6 +25,7 @@ type Props = {
   onUpdatePersist?: (id: string, payload: Omit<Bungalow, 'id'>) => Promise<Bungalow>;
   onDeletePersist?: (id: string) => Promise<void>;
   onUploadMediaPersist?: (file: File) => Promise<MediaAsset>;
+  onSyncGoogleReviews?: (bungalowId: string) => Promise<unknown>;
 };
 
 type FormState = {
@@ -33,6 +34,7 @@ type FormState = {
   pricePerNight: string;
   capacity: string;
   location: string;
+  googlePlaceId: string;
   images: string[];
   features: Partial<Record<BungalowFeatureKey, boolean | string>>;
 };
@@ -43,6 +45,7 @@ const emptyForm: FormState = {
   pricePerNight: '',
   capacity: '2',
   location: '',
+  googlePlaceId: '',
   images: [],
   features: {},
 };
@@ -54,11 +57,13 @@ export function BungalowsModule({
   onUpdatePersist,
   onDeletePersist,
   onUploadMediaPersist,
+  onSyncGoogleReviews,
 }: Props) {
   const [activeTab, setActiveTab] = useState<'general' | 'images' | 'features'>('general');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [syncingGoogle, setSyncingGoogle] = useState(false);
   const [error, setError] = useState('');
 
   const selected = useMemo(
@@ -74,6 +79,7 @@ export function BungalowsModule({
       pricePerNight: String(item.pricePerNight),
       capacity: String(item.capacity),
       location: item.location,
+      googlePlaceId: item.googlePlaceId ?? '',
       images: item.images,
       features: item.features,
     });
@@ -93,6 +99,7 @@ export function BungalowsModule({
       pricePerNight: Number(form.pricePerNight || 0),
       capacity: Number(form.capacity || 1),
       location: form.location.trim(),
+      googlePlaceId: form.googlePlaceId.trim() || null,
       images: form.images,
       features: form.features,
     };
@@ -201,6 +208,39 @@ export function BungalowsModule({
                 value={form.location}
                 onChange={(e) => setForm((prev) => ({ ...prev, location: e.target.value }))}
               />
+              <label className="block text-xs font-medium text-bgl-muted">
+                Google Place ID
+                <Input
+                  className="mt-1.5 font-mono text-xs"
+                  placeholder="ChIJ... (Google Haritalar yer kimligi)"
+                  value={form.googlePlaceId}
+                  onChange={(e) => setForm((prev) => ({ ...prev, googlePlaceId: e.target.value }))}
+                />
+              </label>
+              {editingId && onSyncGoogleReviews ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  disabled={syncingGoogle || !form.googlePlaceId.trim()}
+                  onClick={() => {
+                    void (async () => {
+                      setSyncingGoogle(true);
+                      setError('');
+                      try {
+                        await onSyncGoogleReviews(editingId);
+                      } catch (err) {
+                        setError(err instanceof Error ? err.message : 'Google senkron basarisiz');
+                      } finally {
+                        setSyncingGoogle(false);
+                      }
+                    })();
+                  }}
+                >
+                  {syncingGoogle ? 'Google yorumlari cekiliyor...' : 'Google yorumlarini simdi cek'}
+                </Button>
+              ) : null}
             </div>
           ) : null}
 

@@ -125,6 +125,7 @@ export default function AdminDashboardPage() {
               onUpdatePersist={admin.updateBungalow}
               onDeletePersist={admin.deleteBungalow}
               onUploadMediaPersist={admin.uploadMedia}
+              onSyncGoogleReviews={admin.syncGoogleReviews}
             />
           ) : null}
           {activeMenu === 'channels' ? (

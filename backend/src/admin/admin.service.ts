@@ -45,11 +45,18 @@ export class AdminService {
     location: string;
     images: string[];
     features: Record<string, unknown>;
+    googlePlaceId?: string | null;
   }) {
     const slug = await uniqueBungalowSlug(this.prisma, data.title);
+    const { googlePlaceId, ...rest } = data;
+    const place =
+      googlePlaceId === undefined
+        ? {}
+        : { googlePlaceId: googlePlaceId && String(googlePlaceId).trim() ? String(googlePlaceId).trim() : null };
     return this.prisma.bungalow.create({
       data: {
-        ...data,
+        ...rest,
+        ...place,
         slug,
         icalExportToken: randomUUID(),
         features: data.features as Prisma.InputJsonValue,
@@ -81,15 +88,21 @@ export class AdminService {
       location: string;
       images: string[];
       features: Record<string, unknown>;
+      googlePlaceId: string | null;
     }>,
   ) {
-    const { features, title, ...rest } = data;
+    const { features, title, googlePlaceId, ...rest } = data;
     const slug =
       title !== undefined ? await uniqueBungalowSlug(this.prisma, title, id) : undefined;
+    const placePatch =
+      googlePlaceId === undefined
+        ? {}
+        : { googlePlaceId: googlePlaceId && String(googlePlaceId).trim() ? String(googlePlaceId).trim() : null };
     return this.prisma.bungalow.update({
       where: { id },
       data: {
         ...rest,
+        ...placePatch,
         ...(title !== undefined && { title }),
         ...(slug !== undefined && { slug }),
         ...(features !== undefined && { features: features as Prisma.InputJsonValue }),

@@ -29,6 +29,10 @@ enum ReservationSource {
   BOOKING
 }
 
+enum ReviewSource {
+  GOOGLE
+}
+
 model User {
   id           String        @id @default(uuid())
   name         String
@@ -51,10 +55,12 @@ model Bungalow {
   // ICS export token (Airbnb takvime yapistirilan URL); bos satirlarda seed veya ilk talepte uretilir.
   icalExportToken  String?        @unique
   externalIcalUrl  String         @default("")
+  googlePlaceId    String?
   createdAt        DateTime       @default(now())
   reservations     Reservation[]
   availability     Availability[]
   rooms            Room[]
+  reviews          Review[]
 }
 
 model Reservation {
@@ -76,6 +82,22 @@ model Reservation {
 
   @@index([bungalowId, source])
   @@unique([bungalowId, externalUid])
+}
+
+model Review {
+  id             String       @id @default(uuid())
+  bungalowId     String
+  source         ReviewSource @default(GOOGLE)
+  authorName     String       @db.VarChar(255)
+  text           String       @db.Text
+  rating         Int
+  googleTimeUnix Int
+  reviewedAt     DateTime
+  createdAt      DateTime     @default(now())
+  bungalow       Bungalow     @relation(fields: [bungalowId], references: [id], onDelete: Cascade)
+
+  @@unique([bungalowId, source, googleTimeUnix, authorName])
+  @@index([source, reviewedAt])
 }
 
 model Payment {

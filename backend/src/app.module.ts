@@ -13,6 +13,7 @@ import { SiteModule } from './site/site.module';
 import { ContactModule } from './contact/contact.module';
 import { BlogModule } from './blog/blog.module';
 import { CalendarModule } from './calendar/calendar.module';
+import { GoogleMapsModule } from './google-maps/google-maps.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { CalendarModule } from './calendar/calendar.module';
     ContactModule,
     BlogModule,
     CalendarModule,
+    GoogleMapsModule,
   ],
 })
 export class AppModule {}

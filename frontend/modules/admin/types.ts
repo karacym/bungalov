@@ -86,6 +86,7 @@ export type Bungalow = {
   features: Partial<Record<BungalowFeatureKey, boolean | string>>;
   icalExportToken?: string | null;
   externalIcalUrl?: string | null;
+  googlePlaceId?: string | null;
 };
 
 export type Reservation = {

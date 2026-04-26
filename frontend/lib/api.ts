@@ -98,6 +98,24 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
 }
 
 /** Ag / sunucu hatasinda bos dizi doner; sayfa kirilmaz. */
+export type PublicGoogleReview = {
+  id: string;
+  authorName: string;
+  text: string;
+  rating: number;
+  reviewedAt: string;
+  bungalowTitle: string;
+};
+
+export async function getHomeGoogleReviews(limit = 5): Promise<PublicGoogleReview[]> {
+  try {
+    const q = new URLSearchParams({ limit: String(limit) });
+    return await apiFetch<PublicGoogleReview[]>(`/site/reviews/google?${q}`);
+  } catch {
+    return [];
+  }
+}
+
 export async function getBungalows(): Promise<Bungalow[]> {
   try {
     const rows = await apiFetch<Bungalow[]>('/bungalows');

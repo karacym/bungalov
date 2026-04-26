@@ -10,6 +10,12 @@ import { SearchBungalowsDto } from './dto/search-bungalows.dto';
 export class BungalowsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Public API: Google Place ID dondurulmez. */
+  private stripPublic<T extends { googlePlaceId?: string | null }>(row: T): Omit<T, 'googlePlaceId'> {
+    const { googlePlaceId: _omit, ...rest } = row;
+    return rest;
+  }
+
   private getDateList(checkIn: Date, checkOut: Date): string[] {
     const dates: string[] = [];
     const cursor = new Date(checkIn);
@@ -27,10 +33,12 @@ export class BungalowsService {
   }
 
   findAll() {
-    return this.prisma.bungalow.findMany({
-      include: { rooms: { orderBy: { createdAt: 'desc' } } },
-      orderBy: { createdAt: 'desc' },
-    });
+    return this.prisma.bungalow
+      .findMany({
+        include: { rooms: { orderBy: { createdAt: 'desc' } } },
+        orderBy: { createdAt: 'desc' },
+      })
+      .then((rows) => rows.map((r) => this.stripPublic(r)));
   }
 
   async search(query: SearchBungalowsDto) {
@@ -73,10 +81,12 @@ export class BungalowsService {
     });
     const blockedFromReservations = new Set(overlappingReservations.map((row) => row.bungalowId));
 
-    return byCapacity.filter(
-      (bungalow) =>
-        !blockedFromAvailability.has(bungalow.id) && !blockedFromReservations.has(bungalow.id),
-    );
+    return byCapacity
+      .filter(
+        (bungalow) =>
+          !blockedFromAvailability.has(bungalow.id) && !blockedFromReservations.has(bungalow.id),
+      )
+      .map((b) => this.stripPublic(b));
   }
 
   /** `id` (UUID) veya `slug` ile arama — SEO URL ve eski baglantilar uyumludur. */
@@ -90,14 +100,20 @@ export class BungalowsService {
     if (!bungalow) {
       throw new NotFoundException('Bungalow not found');
     }
-    return bungalow;
+    return this.stripPublic(bungalow);
   }
 
   async create(dto: CreateBungalowDto) {
     const slug = await uniqueBungalowSlug(this.prisma, dto.title);
+    const { googlePlaceId, ...rest } = dto;
+    const place =
+      googlePlaceId === undefined
+        ? {}
+        : { googlePlaceId: googlePlaceId && String(googlePlaceId).trim() ? String(googlePlaceId).trim() : null };
     return this.prisma.bungalow.create({
       data: {
-        ...dto,
+        ...rest,
+        ...place,
         slug,
         features: dto.features as Prisma.InputJsonValue,
       },
@@ -105,14 +121,24 @@ export class BungalowsService {
   }
 
   async update(id: string, dto: UpdateBungalowDto) {
-    await this.findOne(id);
-    const { features, title, ...rest } = dto;
+    const existing = await this.prisma.bungalow.findFirst({
+      where: { OR: [{ id }, { slug: id }] },
+    });
+    if (!existing) {
+      throw new NotFoundException('Bungalow not found');
+    }
+    const { features, title, googlePlaceId, ...rest } = dto;
     const slug =
-      title !== undefined ? await uniqueBungalowSlug(this.prisma, title, id) : undefined;
+      title !== undefined ? await uniqueBungalowSlug(this.prisma, title, existing.id) : undefined;
+    const place =
+      googlePlaceId === undefined
+        ? {}
+        : { googlePlaceId: googlePlaceId && String(googlePlaceId).trim() ? String(googlePlaceId).trim() : null };
     return this.prisma.bungalow.update({
-      where: { id },
+      where: { id: existing.id },
       data: {
         ...rest,
+        ...place,
         ...(title !== undefined && { title }),
         ...(slug !== undefined && { slug }),
         ...(features !== undefined && { features: features as Prisma.InputJsonValue }),
@@ -121,7 +147,12 @@ export class BungalowsService {
   }
 
   async remove(id: string) {
-    await this.findOne(id);
-    return this.prisma.bungalow.delete({ where: { id } });
+    const existing = await this.prisma.bungalow.findFirst({
+      where: { OR: [{ id }, { slug: id }] },
+    });
+    if (!existing) {
+      throw new NotFoundException('Bungalow not found');
+    }
+    return this.prisma.bungalow.delete({ where: { id: existing.id } });
   }
 }

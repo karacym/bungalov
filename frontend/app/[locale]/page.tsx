@@ -1,10 +1,11 @@
 import { getTranslations } from 'next-intl/server';
 import Image from 'next/image';
 import Link from 'next/link';
-import { bungalowDetailPath, getBungalows } from '@/lib/api';
+import { bungalowDetailPath, getBungalows, getHomeGoogleReviews } from '@/lib/api';
 import { ReservationForm } from '@/components/reservation-form';
 import { HeroBackgroundSlider } from '@/components/home/hero-background-slider';
 import { HomeMapSection } from '@/components/home/home-map-section';
+import { GoogleReviewsSection } from '@/components/home/google-reviews-section';
 import { DEFAULT_HOME_HERO_IMAGES } from '@/lib/site-pages-config';
 
 const GALLERY = [
@@ -35,7 +36,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
   const tb = await getTranslations('bungalow');
   const ts = await getTranslations('search');
   const tCommon = await getTranslations({ locale: params.locale, namespace: 'common' });
-  const bungalows = await getBungalows();
+  const [bungalows, googleReviews] = await Promise.all([getBungalows(), getHomeGoogleReviews(5)]);
 
   return (
     <main className="pb-16">
@@ -154,27 +155,13 @@ export default async function HomePage({ params }: { params: { locale: string } 
         </div>
       </section>
 
-      <section className="bgl-container mt-16 md:mt-24">
-        <p className="bgl-section-title">{t('testimonialsEyebrow')}</p>
-        <h2 className="bgl-heading mt-2">{t('testimonialsTitle')}</h2>
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {[
-            { text: t('testimonial1'), author: t('author1') },
-            { text: t('testimonial2'), author: t('author2') },
-            { text: t('testimonial3'), author: t('author3') },
-          ].map((x) => (
-            <blockquote key={x.author} className="bgl-card p-6">
-              <p className="text-sm leading-relaxed text-bgl-muted md:text-base">&ldquo;{x.text}&rdquo;</p>
-              <footer className="mt-5 flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-bgl-moss/10 text-sm font-bold text-bgl-moss">
-                  {x.author.charAt(0)}
-                </span>
-                <span className="text-sm font-semibold text-bgl-ink">{x.author}</span>
-              </footer>
-            </blockquote>
-          ))}
-        </div>
-      </section>
+      <GoogleReviewsSection
+        reviews={googleReviews}
+        eyebrow={t('googleReviewsEyebrow')}
+        title={t('googleReviewsTitle')}
+        empty={t('googleReviewsEmpty')}
+        locale={params.locale}
+      />
 
       <section className="bgl-container mt-16 md:mt-24">
         <p className="bgl-section-title">{t('mapEyebrow')}</p>

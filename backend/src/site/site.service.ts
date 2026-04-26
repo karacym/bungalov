@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ReviewSource } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 export type SiteBrandingDto = {
@@ -55,5 +56,23 @@ export class SiteService {
       contactEmail: typeof raw.contactEmail === 'string' ? raw.contactEmail : DEFAULTS.contactEmail,
       footerLocations: typeof raw.footerLocations === 'string' ? raw.footerLocations : DEFAULTS.footerLocations,
     };
+  }
+
+  async listGoogleReviewsForHome(limit = 5) {
+    const take = Math.min(Math.max(limit, 1), 20);
+    const rows = await this.prisma.review.findMany({
+      where: { source: ReviewSource.GOOGLE },
+      orderBy: { reviewedAt: 'desc' },
+      take,
+      include: { bungalow: { select: { title: true } } },
+    });
+    return rows.map((r) => ({
+      id: r.id,
+      authorName: r.authorName,
+      text: r.text,
+      rating: r.rating,
+      reviewedAt: r.reviewedAt.toISOString(),
+      bungalowTitle: r.bungalow.title,
+    }));
   }
 }
