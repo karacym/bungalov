@@ -161,17 +161,8 @@ async function main() {
 
   await prisma.adminSetting.upsert({
     where: { key: 'operations' },
-    update: {
-      value: {
-        logoUrl: '',
-        supportPhone: '',
-        supportEmail: '',
-        mapEmbedUrl: '',
-        googlePlaceId: '',
-        checkInTime: '14:00',
-        checkOutTime: '11:00',
-      },
-    },
+    // Canli ayarlarin (logo, favicon vb.) deploy/seed ile sifirlanmasini engelle.
+    update: {},
     create: {
       key: 'operations',
       value: {
