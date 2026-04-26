@@ -1,5 +1,6 @@
 import { PrismaClient, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { uniqueBungalowSlug } from '../src/bungalows/bungalow-slug.util';
 
 const prisma = new PrismaClient();
 
@@ -36,9 +37,16 @@ async function main() {
 
   const existing = await prisma.bungalow.count();
   if (existing === 0) {
+    const t1 = 'Gol Kenari Premium Bungalov';
+    const t2 = 'Orman Evi Bungalov';
+    const t3 = 'Dag Manzarali Suite';
+    const slug1 = await uniqueBungalowSlug(prisma, t1);
+    const slug2 = await uniqueBungalowSlug(prisma, t2);
+    const slug3 = await uniqueBungalowSlug(prisma, t3);
     const b1 = await prisma.bungalow.create({
       data: {
-        title: 'Gol Kenari Premium Bungalov',
+        slug: slug1,
+        title: t1,
         description:
           'Dogayla ic ice, genis veranda ve jakuzili modern bungalov. Sabah kahvaltisi dahildir.',
         pricePerNight: 4500,
@@ -49,7 +57,8 @@ async function main() {
     });
     const b2 = await prisma.bungalow.create({
       data: {
-        title: 'Orman Evi Bungalov',
+        slug: slug2,
+        title: t2,
         description:
           'Cam agaclarinin altinda sessiz konaklama. Barbeku alani ve yangin cemberi.',
         pricePerNight: 3200,
@@ -60,7 +69,8 @@ async function main() {
     });
     const b3 = await prisma.bungalow.create({
       data: {
-        title: 'Dag Manzarali Suite',
+        slug: slug3,
+        title: t3,
         description: 'Genis cam cephe ve panoramik dag manzarasi. Balayi icin ideal.',
         pricePerNight: 5800,
         location: 'Uludag, Bursa',
@@ -172,6 +182,21 @@ async function main() {
         mode: 'test',
       },
     });
+  }
+
+  await prisma.emailSettings.upsert({
+    where: { id: 'default' },
+    update: {},
+    create: { id: 'default' },
+  });
+
+  const missingSlug = await prisma.bungalow.findMany({
+    where: { slug: null },
+    select: { id: true, title: true },
+  });
+  for (const row of missingSlug) {
+    const slug = await uniqueBungalowSlug(prisma, row.title, row.id);
+    await prisma.bungalow.update({ where: { id: row.id }, data: { slug } });
   }
 }
 

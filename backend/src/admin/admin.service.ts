@@ -2,15 +2,19 @@ import { Injectable } from '@nestjs/common';
 import { existsSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { Prisma, ReservationStatus } from '@prisma/client';
+import { uniqueBungalowSlug } from '../bungalows/bungalow-slug.util';
+import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReservationsService } from '../reservations/reservations.service';
 import { CreateAdminManualReservationDto } from '../reservations/dto/create-admin-manual-reservation.dto';
+import type { UpdateEmailSettingsDto } from './dto/update-email-settings.dto';
 
 @Injectable()
 export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly reservationsService: ReservationsService,
+    private readonly mailService: MailService,
   ) {}
 
   async stats() {
@@ -31,7 +35,7 @@ export class AdminService {
     });
   }
 
-  createBungalow(data: {
+  async createBungalow(data: {
     title: string;
     description: string;
     pricePerNight: number;
@@ -39,15 +43,17 @@ export class AdminService {
     images: string[];
     features: Record<string, unknown>;
   }) {
+    const slug = await uniqueBungalowSlug(this.prisma, data.title);
     return this.prisma.bungalow.create({
       data: {
         ...data,
+        slug,
         features: data.features as Prisma.InputJsonValue,
       },
     });
   }
 
-  updateBungalow(
+  async updateBungalow(
     id: string,
     data: Partial<{
       title: string;
@@ -58,11 +64,15 @@ export class AdminService {
       features: Record<string, unknown>;
     }>,
   ) {
-    const { features, ...rest } = data;
+    const { features, title, ...rest } = data;
+    const slug =
+      title !== undefined ? await uniqueBungalowSlug(this.prisma, title, id) : undefined;
     return this.prisma.bungalow.update({
       where: { id },
       data: {
         ...rest,
+        ...(title !== undefined && { title }),
+        ...(slug !== undefined && { slug }),
         ...(features !== undefined && { features: features as Prisma.InputJsonValue }),
       },
     });
@@ -118,8 +128,25 @@ export class AdminService {
     };
   }
 
-  updateReservationStatus(id: string, status: ReservationStatus) {
-    return this.prisma.reservation.update({ where: { id }, data: { status } });
+  async updateReservationStatus(id: string, status: ReservationStatus) {
+    const before = await this.prisma.reservation.findUnique({
+      where: { id },
+      include: { user: true, bungalow: true },
+    });
+    const updated = await this.prisma.reservation.update({
+      where: { id },
+      data: { status },
+      include: { user: true, bungalow: true },
+    });
+    if (
+      status === ReservationStatus.paid &&
+      before?.status !== ReservationStatus.paid &&
+      updated.user &&
+      updated.bungalow
+    ) {
+      void this.mailService.notifyReservationPaid(updated, 'tr').catch(() => undefined);
+    }
+    return updated;
   }
 
   createManualReservation(dto: CreateAdminManualReservationDto) {
@@ -358,5 +385,17 @@ export class AdminService {
 
     await this.prisma.mediaAsset.delete({ where: { id } });
     return { ok: true };
+  }
+
+  getEmailSettings() {
+    return this.mailService.getPublicSettings();
+  }
+
+  updateEmailSettings(dto: UpdateEmailSettingsDto) {
+    return this.mailService.updateSettings(dto);
+  }
+
+  sendTestEmail(to: string) {
+    return this.mailService.sendTest(to);
   }
 }

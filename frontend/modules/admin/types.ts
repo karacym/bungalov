@@ -7,11 +7,38 @@ export type AdminMenuKey =
   | 'users'
   | 'media'
   | 'pages'
+  | 'blog'
   | 'content'
   | 'translations'
   | 'reports'
   | 'contact'
+  | 'emailSettings'
   | 'settings';
+
+/** API: GET /admin/blog/posts */
+export type BlogPostRecord = {
+  id: string;
+  slug: string;
+  status: 'draft' | 'published';
+  publishedAt: string | null;
+  titleTr: string;
+  titleEn: string;
+  titleAr: string;
+  excerptTr: string;
+  excerptEn: string;
+  excerptAr: string;
+  bodyTr: string;
+  bodyEn: string;
+  bodyAr: string;
+  metaTitleTr: string | null;
+  metaTitleEn: string | null;
+  metaTitleAr: string | null;
+  metaDescTr: string | null;
+  metaDescEn: string | null;
+  metaDescAr: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
 
 export type ContactMessageRow = {
   id: string;
@@ -46,6 +73,7 @@ export type BungalowFeatureKey =
 
 export type Bungalow = {
   id: string;
+  slug?: string | null;
   title: string;
   description: string;
   pricePerNight: number;
@@ -90,6 +118,20 @@ export type TranslationRow = {
   tr: string;
   en: string;
   ar: string;
+};
+
+export type EmailSettingsState = {
+  enabled: boolean;
+  host: string;
+  port: number;
+  secure: boolean;
+  authUser: string;
+  fromName: string;
+  fromEmail: string;
+  notifyAdminOnNewReservation: boolean;
+  notifyAdminOnContact: boolean;
+  adminNotifyEmail: string | null;
+  hasPassword: boolean;
 };
 
 export type SiteSettings = {

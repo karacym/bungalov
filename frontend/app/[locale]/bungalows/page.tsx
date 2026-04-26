@@ -1,7 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import { getApiBaseUrl, getAvailability, getBungalows, type Bungalow } from '@/lib/api';
+import { bungalowDetailPath, getApiBaseUrl, getAvailability, getBungalows, type Bungalow } from '@/lib/api';
 
 function formatPrice(v: number | string) {
   const n = typeof v === 'string' ? Number(v) : v;
@@ -19,6 +20,18 @@ function getDateList(checkIn: string, checkOut: string): string[] {
     cursor.setDate(cursor.getDate() + 1);
   }
   return dates;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { locale: string };
+}): Promise<Metadata> {
+  const t = await getTranslations({ locale: params.locale, namespace: 'meta' });
+  return {
+    title: t('catalogTitle'),
+    description: t('catalogDescription'),
+  };
 }
 
 function maxGuestsFromBungalow(item: Bungalow): number {
@@ -139,7 +152,7 @@ export default async function BungalowsPage({
                 <p className="mt-3 line-clamp-3 flex-1 text-sm leading-relaxed text-bgl-muted">{item.description}</p>
                 <div className="mt-5 flex flex-wrap gap-2">
                   <Link
-                    href={`/${params.locale}/bungalows/${item.id}`}
+                    href={bungalowDetailPath(params.locale, item)}
                     className="inline-flex w-fit items-center gap-2 rounded-full border border-bgl-moss/30 px-4 py-2 text-xs font-semibold text-bgl-moss transition hover:border-bgl-moss"
                   >
                     {tCat('explore')}

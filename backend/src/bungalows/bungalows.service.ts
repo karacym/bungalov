@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, ReservationStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { uniqueBungalowSlug } from './bungalow-slug.util';
 import { CreateBungalowDto } from './dto/create-bungalow.dto';
 import { UpdateBungalowDto } from './dto/update-bungalow.dto';
 import { SearchBungalowsDto } from './dto/search-bungalows.dto';
@@ -78,9 +79,12 @@ export class BungalowsService {
     );
   }
 
-  async findOne(id: string) {
-    const bungalow = await this.prisma.bungalow.findUnique({
-      where: { id },
+  /** `id` (UUID) veya `slug` ile arama — SEO URL ve eski baglantilar uyumludur. */
+  async findOne(idOrSlug: string) {
+    const bungalow = await this.prisma.bungalow.findFirst({
+      where: {
+        OR: [{ id: idOrSlug }, { slug: idOrSlug }],
+      },
       include: { rooms: { orderBy: { createdAt: 'desc' } } },
     });
     if (!bungalow) {
@@ -89,10 +93,12 @@ export class BungalowsService {
     return bungalow;
   }
 
-  create(dto: CreateBungalowDto) {
+  async create(dto: CreateBungalowDto) {
+    const slug = await uniqueBungalowSlug(this.prisma, dto.title);
     return this.prisma.bungalow.create({
       data: {
         ...dto,
+        slug,
         features: dto.features as Prisma.InputJsonValue,
       },
     });
@@ -100,11 +106,15 @@ export class BungalowsService {
 
   async update(id: string, dto: UpdateBungalowDto) {
     await this.findOne(id);
-    const { features, ...rest } = dto;
+    const { features, title, ...rest } = dto;
+    const slug =
+      title !== undefined ? await uniqueBungalowSlug(this.prisma, title, id) : undefined;
     return this.prisma.bungalow.update({
       where: { id },
       data: {
         ...rest,
+        ...(title !== undefined && { title }),
+        ...(slug !== undefined && { slug }),
         ...(features !== undefined && { features: features as Prisma.InputJsonValue }),
       },
     });

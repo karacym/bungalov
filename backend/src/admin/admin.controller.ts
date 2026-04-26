@@ -19,7 +19,11 @@ import { extname, join } from 'node:path';
 import { ReservationStatus } from '@prisma/client';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
+import { BlogService } from '../blog/blog.service';
+import { CreateBlogPostDto } from '../blog/dto/create-blog-post.dto';
+import { UpdateBlogPostDto } from '../blog/dto/update-blog-post.dto';
 import { AdminService } from './admin.service';
+import { TestEmailDto, UpdateEmailSettingsDto } from './dto/update-email-settings.dto';
 import { ContactService } from '../contact/contact.service';
 import { CreateAdminManualReservationDto } from '../reservations/dto/create-admin-manual-reservation.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -33,6 +37,7 @@ export class AdminController {
   constructor(
     private readonly adminService: AdminService,
     private readonly contactService: ContactService,
+    private readonly blogService: BlogService,
   ) {}
 
   @Get('stats')
@@ -145,6 +150,21 @@ export class AdminController {
   @Patch('settings')
   patchSettings(@Body() body: Record<string, unknown>) {
     return this.adminService.upsertSettings(body);
+  }
+
+  @Get('email-settings')
+  getEmailSettings() {
+    return this.adminService.getEmailSettings();
+  }
+
+  @Put('email-settings')
+  updateEmailSettings(@Body() body: UpdateEmailSettingsDto) {
+    return this.adminService.updateEmailSettings(body);
+  }
+
+  @Post('email-settings/test')
+  testEmail(@Body() body: TestEmailDto) {
+    return this.adminService.sendTestEmail(body.to);
   }
 
   @Get('contact')
@@ -289,5 +309,25 @@ export class AdminController {
   @Delete('media/:id')
   deleteMedia(@Param('id') id: string) {
     return this.adminService.deleteMedia(id);
+  }
+
+  @Get('blog/posts')
+  blogPostsList() {
+    return this.blogService.listAllAdmin();
+  }
+
+  @Post('blog/posts')
+  blogPostCreate(@Body() body: CreateBlogPostDto) {
+    return this.blogService.create(body);
+  }
+
+  @Put('blog/posts/:id')
+  blogPostUpdate(@Param('id') id: string, @Body() body: UpdateBlogPostDto) {
+    return this.blogService.update(id, body);
+  }
+
+  @Delete('blog/posts/:id')
+  blogPostDelete(@Param('id') id: string) {
+    return this.blogService.remove(id);
   }
 }

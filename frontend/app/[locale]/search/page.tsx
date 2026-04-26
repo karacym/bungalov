@@ -1,11 +1,24 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import { searchBungalows } from '@/lib/api';
+import { bungalowDetailPath, searchBungalows } from '@/lib/api';
 
 function formatPrice(v: number | string) {
   const n = typeof v === 'string' ? Number(v) : v;
   return Number.isFinite(n) ? n : 0;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { locale: string };
+}): Promise<Metadata> {
+  const t = await getTranslations({ locale: params.locale, namespace: 'meta' });
+  return {
+    title: t('searchTitle'),
+    description: t('searchDescription'),
+  };
 }
 
 export default async function SearchPage({
@@ -97,7 +110,7 @@ export default async function SearchPage({
                   ) : null}
                   <div className="mt-5 flex flex-wrap gap-2">
                     <Link
-                      href={`/${params.locale}/bungalow/${item.id}?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`}
+                      href={`${bungalowDetailPath(params.locale, item)}?checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}&guests=${guests}`}
                       className="inline-flex items-center gap-2 rounded-full border border-bgl-moss/30 px-4 py-2 text-xs font-semibold text-bgl-moss transition hover:border-bgl-moss"
                     >
                       {t('viewDetails')}

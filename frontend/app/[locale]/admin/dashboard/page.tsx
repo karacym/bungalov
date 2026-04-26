@@ -1,10 +1,12 @@
 'use client';
 
+import { adminMenuLabel } from '@/components/admin/admin-menu-label';
 import { AdminMobileDrawer } from '@/components/admin/admin-mobile-drawer';
 import { AdminSidebar } from '@/components/admin/admin-sidebar';
 import { AdminTopbar } from '@/components/admin/admin-topbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { BlogModule } from '@/modules/admin/blog-module';
 import { BungalowsModule } from '@/modules/admin/bungalows-module';
 import { CalendarModule } from '@/modules/admin/calendar-module';
 import { ContactMessagesModule } from '@/modules/admin/contact-messages-module';
@@ -15,6 +17,7 @@ import { PagesModule } from '@/modules/admin/pages-module';
 import { PaymentsModule } from '@/modules/admin/payments-module';
 import { ReportsModule } from '@/modules/admin/reports-module';
 import { ReservationsModule } from '@/modules/admin/reservations-module';
+import { EmailSettingsModule } from '@/modules/admin/email-settings-module';
 import { SettingsModule } from '@/modules/admin/settings-module';
 import { TranslationsModule } from '@/modules/admin/translations-module';
 import { type AdminMenuKey } from '@/modules/admin/types';
@@ -28,6 +31,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 export default function AdminDashboardPage() {
   const t = useTranslations('admin');
+  const tNav = useTranslations('nav');
   const params = useParams<{ locale: string }>();
   const router = useRouter();
   const locale = String(params.locale ?? 'tr');
@@ -51,7 +55,10 @@ export default function AdminDashboardPage() {
     router.push(`/${locale}/admin/login`);
   }
 
-  const activeLabel = useMemo(() => t(`menu.${activeMenu}`), [activeMenu, t]);
+  const activeLabel = useMemo(
+    () => adminMenuLabel(t, tNav, activeMenu),
+    [activeMenu, t, tNav],
+  );
 
   return (
     <main className="bgl-container max-w-[1400px] py-4 md:py-6">
@@ -149,6 +156,14 @@ export default function AdminDashboardPage() {
           {activeMenu === 'pages' ? (
             <PagesModule pages={admin.sitePages} onChange={admin.setSitePages} />
           ) : null}
+          {activeMenu === 'blog' ? (
+            <BlogModule
+              posts={admin.blogPosts}
+              onCreate={admin.createBlogPost}
+              onUpdate={admin.updateBlogPost}
+              onDelete={admin.deleteBlogPost}
+            />
+          ) : null}
           {activeMenu === 'content' ? (
             <ContentModule sections={admin.contentSections} onChange={admin.setContentSections} />
           ) : null}
@@ -172,6 +187,14 @@ export default function AdminDashboardPage() {
               onMarkRead={admin.markContactRead}
               onMarkReplied={admin.markContactReplied}
               onDelete={admin.deleteContactMessage}
+            />
+          ) : null}
+          {activeMenu === 'emailSettings' ? (
+            <EmailSettingsModule
+              settings={admin.emailSettings}
+              onChange={admin.setEmailSettings}
+              onSave={admin.saveEmailSettings}
+              onSendTest={admin.sendTestEmail}
             />
           ) : null}
           {activeMenu === 'settings' ? (

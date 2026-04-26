@@ -1,23 +1,76 @@
-import Image from 'next/image';
 import Link from 'next/link';
+import type { Metadata } from 'next';
+import { permanentRedirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { getApiBaseUrl, getBungalow } from '@/lib/api';
+import { bungalowDetailPath, getApiBaseUrl, getBungalow } from '@/lib/api';
 import { ReservationForm } from '@/components/reservation-form';
 import { AvailabilityPreview } from '@/components/availability-preview';
+import { BungalowGalleryLightbox } from '@/components/bungalow-gallery-lightbox';
+import { getSiteBranding } from '@/lib/site-branding';
+import {
+  buildBungalowMetaDescription,
+  buildBungalowTitleSegment,
+  bungalowJsonLd,
+} from '@/lib/seo-bungalow';
 
 function formatPrice(v: number | string) {
   const n = typeof v === 'string' ? Number(v) : v;
   return Number.isFinite(n) ? n : 0;
 }
 
+function siteOrigin(): string {
+  return (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').trim().replace(/\/$/, '');
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { locale: string; slug: string };
+}): Promise<Metadata> {
+  const bungalow = await getBungalow(params.slug);
+  const branding = await getSiteBranding();
+  const site = branding.siteName?.trim() || 'Bungalov';
+  if (!bungalow) {
+    return {
+      title: site,
+      robots: { index: false, follow: true },
+    };
+  }
+  const t = await getTranslations({ locale: params.locale, namespace: 'bungalowDetail' });
+  const titleSeg = buildBungalowTitleSegment(bungalow);
+  const description = buildBungalowMetaDescription(bungalow, t('metaReserveCta'));
+  const path = bungalowDetailPath(params.locale, bungalow);
+  const canonical = `${siteOrigin()}${path}`;
+  const ogImage = bungalow.images[0];
+
+  return {
+    title: titleSeg,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      title: `${titleSeg} | ${site}`,
+      description,
+      url: canonical,
+      type: 'website',
+      ...(ogImage ? { images: [{ url: ogImage, alt: bungalow.title }] } : {}),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${titleSeg} | ${site}`,
+      description,
+      ...(ogImage ? { images: [ogImage] } : {}),
+    },
+  };
+}
+
 export default async function BungalowDetailPage({
   params,
   searchParams,
 }: {
-  params: { locale: string; id: string };
+  params: { locale: string; slug: string };
   searchParams?: { checkIn?: string; checkOut?: string; guests?: string };
 }) {
-  const bungalow = await getBungalow(params.id);
+  const bungalow = await getBungalow(params.slug);
   const tb = await getTranslations('bungalow');
   const td = await getTranslations({ locale: params.locale, namespace: 'bungalowDetail' });
   const ts = await getTranslations({ locale: params.locale, namespace: 'search' });
@@ -45,10 +98,30 @@ export default async function BungalowDetailPage({
     );
   }
 
+  const canonicalPath = bungalowDetailPath(params.locale, bungalow);
+  if (bungalow.slug?.trim() && params.slug === bungalow.id) {
+    const q = new URLSearchParams();
+    if (checkIn) q.set('checkIn', checkIn);
+    if (checkOut) q.set('checkOut', checkOut);
+    if (Number.isFinite(guests) && guests > 0) q.set('guests', String(guests));
+    const qs = q.toString();
+    permanentRedirect(`/${params.locale}/bungalows/${bungalow.slug}${qs ? `?${qs}` : ''}`);
+  }
+
   const price = formatPrice(bungalow.pricePerNight);
+  const jsonLd = bungalowJsonLd(bungalow, `${siteOrigin()}${canonicalPath}`);
+  const imageAlts = bungalow.images.map((_, i) =>
+    i === 0
+      ? td('heroImageAlt', { title: bungalow.title, location: bungalow.location })
+      : td('galleryImageAlt', { title: bungalow.title, n: i + 1 }),
+  );
 
   return (
     <main className="pb-28 md:pb-16">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="border-b border-bgl-mist/80 bg-white/60">
         <div className="bgl-container py-8 md:py-10">
           <p className="text-xs font-semibold uppercase tracking-widest text-bgl-muted">{td('eyebrow')}</p>
@@ -61,40 +134,28 @@ export default async function BungalowDetailPage({
       </div>
 
       <div className="bgl-container mt-8 space-y-8 md:mt-10">
-        <section className="bgl-card overflow-hidden">
-          {bungalow.images[0] ? (
-            <div className="relative aspect-[21/10] w-full min-h-[220px] bg-bgl-mist">
-              <Image src={bungalow.images[0]} alt={bungalow.title} fill className="object-cover" priority sizes="100vw" />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-bgl-ink/40 to-transparent" />
-            </div>
-          ) : null}
+        <BungalowGalleryLightbox images={bungalow.images} alts={imageAlts} title={bungalow.title}>
           <div className="p-6 md:p-8">
-            <p className="max-w-3xl text-sm leading-relaxed text-bgl-muted md:text-base">{bungalow.description}</p>
+            <h2 id="bungalow-details-heading" className="text-lg font-semibold tracking-tight text-bgl-ink md:text-xl">
+              {td('detailsHeading')}
+            </h2>
+            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-bgl-muted md:text-base">{bungalow.description}</p>
           </div>
-        </section>
+        </BungalowGalleryLightbox>
 
-        {bungalow.images.length > 1 ? (
-          <section className="bgl-card p-6 md:p-8">
-            <h2 className="bgl-heading">{tb('galleryTitle')}</h2>
-            <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3">
-              {bungalow.images.slice(1).map((src) => (
-                <div key={src} className="relative aspect-[4/3] overflow-hidden rounded-xl bg-bgl-mist ring-1 ring-black/5">
-                  <Image src={src} alt="" fill className="object-cover" sizes="(max-width:768px) 50vw, 33vw" />
-                </div>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        <section className="bgl-card p-6 md:p-8">
-          <h2 className="bgl-heading">{tb('availabilityTitle')}</h2>
+        <section className="bgl-card p-6 md:p-8" aria-labelledby="bungalow-availability-heading">
+          <h2 id="bungalow-availability-heading" className="bgl-heading">
+            {tb('availabilityTitle')}
+          </h2>
           <div className="mt-6">
             <AvailabilityPreview bungalowId={bungalow.id} locale={params.locale} />
           </div>
         </section>
 
-        <section className="bgl-card overflow-visible p-6 md:p-8">
-          <h2 className="bgl-heading">{td('reservationSection')}</h2>
+        <section className="bgl-card overflow-visible p-6 md:p-8" aria-labelledby="bungalow-reservation-heading">
+          <h2 id="bungalow-reservation-heading" className="bgl-heading">
+            {td('reservationSection')}
+          </h2>
           <div className="mt-4">
             <ReservationForm
               bungalowId={bungalow.id}

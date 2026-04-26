@@ -6,6 +6,8 @@ import {
 import { randomUUID } from 'node:crypto';
 import { ReservationStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import type { ReservationMailContext } from '../mail/mail.service';
+import { MailService } from '../mail/mail.service';
 import { CreateReservationDto } from './dto/create-reservation.dto';
 import { CreateGuestReservationDto } from './dto/create-guest-reservation.dto';
 import { CreateAdminManualReservationDto } from './dto/create-admin-manual-reservation.dto';
@@ -17,7 +19,10 @@ type CreateForUserOptions = {
 
 @Injectable()
 export class ReservationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
 
   private maxGuestsFromFeatures(features: unknown): number {
     const data = (features ?? {}) as Record<string, unknown>;
@@ -143,7 +148,7 @@ export class ReservationsService {
 
     const status = options?.initialStatus ?? ReservationStatus.pending;
 
-    return this.prisma.reservation.create({
+    const created = await this.prisma.reservation.create({
       data: {
         userId,
         bungalowId: dto.bungalowId,
@@ -159,6 +164,19 @@ export class ReservationsService {
         payment: true,
       },
     });
+
+    void this.fireReservationEmails(created, status);
+
+    return created;
+  }
+
+  private fireReservationEmails(r: ReservationMailContext, status: ReservationStatus) {
+    void this.mailService.notifyAdminNewReservation(r).catch(() => undefined);
+    if (status === ReservationStatus.paid) {
+      void this.mailService.notifyReservationPaid(r, 'tr').catch(() => undefined);
+    } else {
+      void this.mailService.notifyReservationPending(r, 'tr').catch(() => undefined);
+    }
   }
 
   findAll() {

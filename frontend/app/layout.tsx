@@ -4,7 +4,7 @@ import { Plus_Jakarta_Sans } from 'next/font/google';
 import { getSiteBranding } from '@/lib/site-branding';
 
 const sans = Plus_Jakarta_Sans({
-  subsets: ['latin'],
+  subsets: ['latin', 'latin-ext'],
   variable: '--font-sans',
   display: 'swap',
 });
@@ -19,9 +19,13 @@ export async function generateMetadata(): Promise<Metadata> {
     branding.metaDescription?.trim() || 'Nature-themed bungalow rental platform';
   const ogTitle = branding.siteName || title;
 
+  const brand = branding.siteName?.trim() || 'Bungalov';
   return {
     metadataBase: new URL(siteOrigin),
-    title,
+    title: {
+      default: title,
+      template: `%s | ${brand}`,
+    },
     description,
     openGraph: {
       title: ogTitle,

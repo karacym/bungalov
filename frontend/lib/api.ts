@@ -1,5 +1,7 @@
 export type Bungalow = {
   id: string;
+  /** SEO URL; yoksa `id` ile listelenir. */
+  slug?: string | null;
   title: string;
   description: string;
   pricePerNight: number | string;
@@ -7,6 +9,17 @@ export type Bungalow = {
   images: string[];
   features: Record<string, unknown>;
 };
+
+/** Yerel detay yolu: slug varsa slug, yoksa UUID (slug backend’de ASCII). */
+export function bungalowDetailSegment(b: Pick<Bungalow, 'id' | 'slug'>): string {
+  const s = b.slug?.trim();
+  if (s) return s;
+  return b.id;
+}
+
+export function bungalowDetailPath(locale: string, b: Pick<Bungalow, 'id' | 'slug'>): string {
+  return `/${locale}/bungalows/${bungalowDetailSegment(b)}`;
+}
 
 export type AvailabilityRow = {
   id: string;
@@ -113,10 +126,10 @@ export async function searchBungalows(params: {
   }
 }
 
-/** Ag / sunucu veya 404 durumunda null. */
-export async function getBungalow(id: string): Promise<Bungalow | null> {
+/** Ag / sunucu veya 404 durumunda null. `slug` veya `id` (UUID) kabul eder. */
+export async function getBungalow(slugOrId: string): Promise<Bungalow | null> {
   try {
-    const item = await apiFetch<Bungalow>(`/bungalows/${id}`);
+    const item = await apiFetch<Bungalow>(`/bungalows/${encodeURIComponent(slugOrId)}`);
     return normalizeBungalow(item);
   } catch {
     return null;

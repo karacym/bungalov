@@ -7,6 +7,7 @@ const assetPrefix = process.env.NEXT_PUBLIC_ASSET_PREFIX?.replace(/\/$/, '') ?? 
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  transpilePackages: ['@uiw/react-md-editor'],
   ...(basePath ? { basePath } : {}),
   ...(assetPrefix ? { assetPrefix } : {}),
   images: {

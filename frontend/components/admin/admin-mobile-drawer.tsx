@@ -1,5 +1,6 @@
 'use client';
 
+import { adminMenuLabel } from '@/components/admin/admin-menu-label';
 import { ADMIN_MENU } from '@/components/admin/menu-config';
 import { Button } from '@/components/ui/button';
 import type { AdminMenuKey } from '@/modules/admin/types';
@@ -15,6 +16,7 @@ type Props = {
 
 export function AdminMobileDrawer({ open, active, onSelect, onClose }: Props) {
   const t = useTranslations('admin');
+  const tNav = useTranslations('nav');
   if (!open) return null;
 
   return (
@@ -51,7 +53,7 @@ export function AdminMobileDrawer({ open, active, onSelect, onClose }: Props) {
                 }`}
               >
                 <Icon className="h-4 w-4" />
-                {t(`menu.${item.key}`)}
+                {adminMenuLabel(t, tNav, item.key)}
               </button>
             );
           })}

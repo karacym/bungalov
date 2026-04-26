@@ -7,10 +7,10 @@ export default createMiddleware({
   localePrefix: 'always',
 });
 
-/** CSS/JS ve RSC icin _next yollarini acikca disla (locale middleware yanlis yonlendirmesin) */
+/**
+ * next-intl resmi desen: `/_next`, `/_vercel`, `api`, dosya uzantili yollar middleware'e girmez.
+ * Ayni projede iki `next dev` calistirmayin — ikisi de `.next`e yazar; chunk/CSS 500 donebilir.
+ */
 export const config = {
-  matcher: [
-    '/',
-    '/((?!api|_next/static|_next/image|_next/webpack|_next/data|_vercel|favicon.ico|robots.txt|sitemap.xml|.*\\..*).*)',
-  ],
+  matcher: ['/', '/((?!api|_next|_vercel|.*\\..*).*)'],
 };

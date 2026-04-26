@@ -9,7 +9,9 @@ import {
   Languages,
   LayoutDashboard,
   Mail,
+  Newspaper,
   NotebookPen,
+  Send,
   Settings,
   Users,
 } from 'lucide-react';
@@ -27,9 +29,11 @@ export const ADMIN_MENU: Array<{
   { key: 'users', icon: Users },
   { key: 'media', icon: Image },
   { key: 'pages', icon: NotebookPen },
+  { key: 'blog', icon: Newspaper },
   { key: 'content', icon: Globe },
   { key: 'translations', icon: Languages },
   { key: 'reports', icon: BarChart3 },
   { key: 'contact', icon: Mail },
+  { key: 'emailSettings', icon: Send },
   { key: 'settings', icon: Settings },
 ];

@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ReservationStatus } from '@prisma/client';
 import Iyzipay = require('iyzipay');
+import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { InitiatePaymentDto } from './dto/initiate-payment.dto';
 import { PaymentCallbackDto } from './dto/payment-callback.dto';
@@ -13,7 +14,10 @@ type IyzicoConfig = {
 
 @Injectable()
 export class PaymentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
 
   private getFrontendBaseUrl() {
     const frontendOrigins = (process.env.FRONTEND_URL ?? '')
@@ -295,11 +299,14 @@ export class PaymentsService {
         bungalowId: true,
         checkIn: true,
         checkOut: true,
+        status: true,
       },
     });
     if (!reservation) {
       throw new NotFoundException('Reservation not found');
     }
+
+    const wasPaidBefore = reservation.status === ReservationStatus.paid;
 
     await this.prisma.$transaction(async (tx) => {
       await tx.payment.update({
@@ -337,6 +344,18 @@ export class PaymentsService {
       }
     });
 
+    if (isSuccess && !wasPaidBefore) {
+      const full = await this.prisma.reservation.findUnique({
+        where: { id: dto.reservationId },
+        include: { user: true, bungalow: true },
+      });
+      if (full?.user && full.bungalow) {
+        void this.mailService
+          .notifyReservationPaid(full, 'tr')
+          .catch(() => undefined);
+      }
+    }
+
     return { ok: true };
   }
 
@@ -363,6 +382,12 @@ export class PaymentsService {
     if (!payment || payment.reservationId !== params.reservationId) {
       throw new NotFoundException('Payment not found');
     }
+
+    const prevReservation = await this.prisma.reservation.findUnique({
+      where: { id: params.reservationId },
+      select: { status: true },
+    });
+    const wasPaidBefore = prevReservation?.status === ReservationStatus.paid;
 
     const iyzicoConfig = await this.getIyzicoConfig();
     const iyzipay = this.createIyzicoClient(iyzicoConfig);
@@ -412,6 +437,19 @@ export class PaymentsService {
     });
 
     const locale = params.locale?.trim() || 'tr';
+
+    if (isSuccess && !wasPaidBefore) {
+      const full = await this.prisma.reservation.findUnique({
+        where: { id: payment.reservationId },
+        include: { user: true, bungalow: true },
+      });
+      if (full?.user && full.bungalow) {
+        void this.mailService
+          .notifyReservationPaid(full, locale)
+          .catch(() => undefined);
+      }
+    }
+
     const frontendBaseUrl = this.getFrontendBaseUrl();
     const status = isSuccess ? 'paid' : 'failed';
     return `${frontendBaseUrl}/${locale}/reservation/result?status=${status}&reservationId=${payment.reservationId}`;

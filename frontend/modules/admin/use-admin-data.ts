@@ -9,9 +9,11 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type {
   AdminStats,
+  BlogPostRecord,
   Bungalow,
   ContactListStatus,
   ContactMessageRow,
+  EmailSettingsState,
   MediaAsset,
   Payment,
   PaymentProviderSetting,
@@ -41,6 +43,20 @@ function mapReservationStatus(input: RawReservation['status']): ReservationStatu
   return 'pending';
 }
 
+async function parseBlogError(response: Response): Promise<string> {
+  const raw = await response.text();
+  let msg = raw || `API ${response.status}`;
+  try {
+    const j = JSON.parse(raw) as { message?: string | string[] };
+    if (j?.message) {
+      msg = Array.isArray(j.message) ? j.message.join(', ') : String(j.message);
+    }
+  } catch {
+    /* metin JSON degilse raw kullan */
+  }
+  return msg;
+}
+
 function mapRawToReservation(item: RawReservation): Reservation {
   return {
     id: item.id,
@@ -61,6 +77,20 @@ function mapRawToReservation(item: RawReservation): Reservation {
             : 'pending',
   };
 }
+
+const DEFAULT_EMAIL_SETTINGS: EmailSettingsState = {
+  enabled: false,
+  host: '',
+  port: 587,
+  secure: false,
+  authUser: '',
+  fromName: '',
+  fromEmail: '',
+  notifyAdminOnNewReservation: true,
+  notifyAdminOnContact: true,
+  adminNotifyEmail: null,
+  hasPassword: false,
+};
 
 function mapOperationsToSiteSettings(op: Record<string, unknown>): SiteSettings {
   return {
@@ -163,6 +193,8 @@ export function useAdminData() {
     { id: 'about.main', title: 'Hakkimizda', description: 'Firma tanitimi' },
     { id: 'contact.main', title: 'Iletisim', description: 'Iletisim bilgileri' },
   ]);
+  const [emailSettings, setEmailSettings] = useState<EmailSettingsState>(DEFAULT_EMAIL_SETTINGS);
+
   const [settings, setSettings] = useState<SiteSettings>({
     siteName: 'Bungalov',
     logoUrl: '',
@@ -180,6 +212,7 @@ export function useAdminData() {
   });
 
   const [contactMessages, setContactMessages] = useState<ContactMessageRow[]>([]);
+  const [blogPosts, setBlogPosts] = useState<BlogPostRecord[]>([]);
   const [contactPagination, setContactPagination] = useState({
     page: 1,
     limit: 20,
@@ -253,7 +286,7 @@ export function useAdminData() {
     setLoading(true);
     setError('');
     try {
-      const [statsRes, bungalowsRes, reservationsRes, translationsRes, providersRes, mediaRes, settingsRes] =
+      const [statsRes, bungalowsRes, reservationsRes, translationsRes, providersRes, mediaRes, settingsRes, emailRes, blogRes] =
         await Promise.all([
           authFetch('/admin/stats'),
           authFetch('/admin/bungalows'),
@@ -262,6 +295,8 @@ export function useAdminData() {
           authFetch('/admin/payment-providers'),
           authFetch('/admin/media'),
           authFetch('/admin/settings'),
+          authFetch('/admin/email-settings'),
+          authFetch('/admin/blog/posts'),
         ]);
 
       const statsPayload = (await statsRes.json()) as {
@@ -290,6 +325,16 @@ export function useAdminData() {
       const mediaPayload = (await mediaRes.json()) as MediaAsset[];
       const settingsPayload = (await settingsRes.json()) as { operations?: Record<string, unknown> };
       setSettings(mapOperationsToSiteSettings(settingsPayload.operations ?? {}));
+
+      const blogPayload = (await blogRes.json()) as BlogPostRecord[];
+      setBlogPosts(Array.isArray(blogPayload) ? blogPayload : []);
+
+      const emailPayload = (await emailRes.json()) as EmailSettingsState;
+      setEmailSettings({
+        ...DEFAULT_EMAIL_SETTINGS,
+        ...emailPayload,
+        port: Number(emailPayload.port) || 587,
+      });
 
       const mappedReservations: Reservation[] = reservationsPayload.items.map((item) =>
         mapRawToReservation(item),
@@ -650,6 +695,98 @@ export function useAdminData() {
     [authFetch],
   );
 
+  const saveEmailSettings = useCallback(
+    async (payload: EmailSettingsState & { password?: string }) => {
+      const { password, ...rest } = payload;
+      const body: Record<string, unknown> = { ...rest };
+      if (password) body.password = password;
+      const response = await authFetch('/admin/email-settings', {
+        method: 'PUT',
+        body: JSON.stringify(body),
+      });
+      const saved = (await response.json()) as EmailSettingsState;
+      setEmailSettings({
+        ...DEFAULT_EMAIL_SETTINGS,
+        ...saved,
+        port: Number(saved.port) || 587,
+      });
+    },
+    [authFetch],
+  );
+
+  const sendTestEmail = useCallback(
+    async (to: string) => {
+      const response = await authFetch('/admin/email-settings/test', {
+        method: 'POST',
+        body: JSON.stringify({ to }),
+      });
+      if (!response.ok) {
+        const raw = await response.text();
+        throw new Error(raw || `API ${response.status}`);
+      }
+    },
+    [authFetch],
+  );
+
+  const createBlogPost = useCallback(
+    async (payload: Record<string, unknown>) => {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const response = await fetch(`${getApiBaseUrl()}/admin/blog/posts`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      if (!response.ok) {
+        throw new Error(await parseBlogError(response));
+      }
+      const created = (await response.json()) as BlogPostRecord;
+      setBlogPosts((prev) => [created, ...prev]);
+      return created;
+    },
+    [],
+  );
+
+  const updateBlogPost = useCallback(
+    async (id: string, payload: Record<string, unknown>) => {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const response = await fetch(`${getApiBaseUrl()}/admin/blog/posts/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      if (!response.ok) {
+        throw new Error(await parseBlogError(response));
+      }
+      const updated = (await response.json()) as BlogPostRecord;
+      setBlogPosts((prev) => prev.map((p) => (p.id === id ? updated : p)));
+      return updated;
+    },
+    [],
+  );
+
+  const deleteBlogPost = useCallback(
+    async (id: string) => {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const response = await fetch(`${getApiBaseUrl()}/admin/blog/posts/${id}`, {
+        method: 'DELETE',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      if (!response.ok) {
+        throw new Error(await parseBlogError(response));
+      }
+      setBlogPosts((prev) => prev.filter((p) => p.id !== id));
+    },
+    [],
+  );
+
   return {
     loading,
     error,
@@ -678,6 +815,10 @@ export function useAdminData() {
     settings,
     setSettings,
     saveSettings,
+    emailSettings,
+    setEmailSettings,
+    saveEmailSettings,
+    sendTestEmail,
     contactMessages,
     contactPagination,
     contactLoading,
@@ -692,6 +833,10 @@ export function useAdminData() {
     createBungalow,
     updateBungalow,
     deleteBungalow,
+    blogPosts,
+    createBlogPost,
+    updateBlogPost,
+    deleteBlogPost,
     refresh,
   };
 }

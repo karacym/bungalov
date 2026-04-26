@@ -12,6 +12,11 @@ enum UserRole {
   user
 }
 
+enum BlogPostStatus {
+  draft
+  published
+}
+
 enum ReservationStatus {
   pending
   paid
@@ -30,6 +35,7 @@ model User {
 
 model Bungalow {
   id            String         @id @default(uuid())
+  slug          String?        @unique
   title         String
   description   String
   pricePerNight Decimal        @db.Decimal(10, 2)
@@ -140,4 +146,47 @@ model ContactMessage {
 
   @@index([createdAt])
   @@index([email])
+}
+
+// Tek satir SMTP ayarlari (panelden yonetilir; SMTP sifresi AES-GCM ile sifrelenir).
+// Cok dilli blog (Markdown govde; SEO icin meta alanlari istege bagli).
+model BlogPost {
+  id            String          @id @default(uuid())
+  slug          String          @unique
+  status        BlogPostStatus  @default(draft)
+  publishedAt   DateTime?
+  titleTr       String
+  titleEn       String
+  titleAr       String
+  excerptTr     String          @db.Text
+  excerptEn     String          @db.Text
+  excerptAr     String          @db.Text
+  bodyTr        String          @db.Text
+  bodyEn        String          @db.Text
+  bodyAr        String          @db.Text
+  metaTitleTr   String?
+  metaTitleEn   String?
+  metaTitleAr   String?
+  metaDescTr    String?         @db.Text
+  metaDescEn    String?         @db.Text
+  metaDescAr    String?         @db.Text
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model EmailSettings {
+  id                          String   @id @default("default")
+  enabled                     Boolean  @default(false)
+  host                        String   @default("")
+  port                        Int      @default(587)
+  secure                      Boolean  @default(false)
+  authUser                    String   @default("")
+  passwordEnc                 String   @default("")
+  fromName                    String   @default("")
+  fromEmail                   String   @default("")
+  notifyAdminOnNewReservation Boolean @default(true)
+  notifyAdminOnContact        Boolean @default(true)
+  adminNotifyEmail            String?
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
 }

@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getBungalows } from '@/lib/api';
+import { bungalowDetailPath, getBungalows } from '@/lib/api';
 import { ReservationForm } from '@/components/reservation-form';
 import { HeroBackgroundSlider } from '@/components/home/hero-background-slider';
 import { HomeMapSection } from '@/components/home/home-map-section';
@@ -19,7 +19,7 @@ const GALLERY = [
 export async function generateMetadata({ params }: { params: { locale: string } }) {
   const t = await getTranslations({ locale: params.locale, namespace: 'meta' });
   return {
-    title: t('homeTitle', { locale: params.locale.toUpperCase() }),
+    title: t('homeTitle'),
     description: t('homeDescription'),
   };
 }
@@ -104,7 +104,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
               <div className="p-5">
                 <h3 className="text-lg font-semibold text-bgl-ink">{item.title}</h3>
                 <Link
-                  href={`/${params.locale}/bungalows/${item.id}`}
+                  href={bungalowDetailPath(params.locale, item)}
                   className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-bgl-moss hover:text-bgl-mossDark"
                 >
                   {ts('viewDetails')}
@@ -142,7 +142,13 @@ export default async function HomePage({ params }: { params: { locale: string } 
                 i === 0 ? 'col-span-2 aspect-[16/10] md:row-span-2 md:aspect-auto md:min-h-[320px]' : 'aspect-square'
               }`}
             >
-              <Image src={src} alt="" fill className="object-cover transition duration-700 hover:scale-105" sizes="(max-width:768px) 50vw, 25vw" />
+              <Image
+                src={src}
+                alt={t('galleryImageAlt', { n: i + 1 })}
+                fill
+                className="object-cover transition duration-700 hover:scale-105"
+                sizes="(max-width:768px) 50vw, 25vw"
+              />
             </div>
           ))}
         </div>

@@ -35,7 +35,7 @@ export default async function LocaleLayout({
       >
         <SiteHeader
           locale={params.locale}
-          labels={{ home: t('home'), bungalows: t('bungalows'), contact: t('contact') }}
+          labels={{ home: t('home'), bungalows: t('bungalows'), blog: t('blog'), contact: t('contact') }}
           branding={{ siteName: branding.siteName, logoUrl: branding.logoUrl }}
           mobileA11y={{ menu: tCommon('a11yMenu'), closeMenu: tCommon('a11yCloseMenu') }}
         />

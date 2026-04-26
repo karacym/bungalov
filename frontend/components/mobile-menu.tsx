@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-type Labels = { home: string; bungalows: string; contact: string };
+type Labels = { home: string; bungalows: string; blog: string; contact: string };
 
 type A11y = { menu: string; closeMenu: string };
 
@@ -48,6 +48,9 @@ export function MobileMenu({
               </Link>
               <Link href={`/${locale}/bungalows`} className="rounded-lg px-3 py-2 hover:bg-bgl-cream" onClick={() => setOpen(false)}>
                 {labels.bungalows}
+              </Link>
+              <Link href={`/${locale}/blog`} className="rounded-lg px-3 py-2 hover:bg-bgl-cream" onClick={() => setOpen(false)}>
+                {labels.blog}
               </Link>
               <Link href={`/${locale}/contact`} className="rounded-lg px-3 py-2 hover:bg-bgl-cream" onClick={() => setOpen(false)}>
                 {labels.contact}

@@ -4,7 +4,7 @@ import { MobileMenu } from '@/components/mobile-menu';
 
 const LOCALES = ['tr', 'en', 'ar'] as const;
 
-type NavLabels = { home: string; bungalows: string; contact: string };
+type NavLabels = { home: string; bungalows: string; blog: string; contact: string };
 
 type MobileA11y = { menu: string; closeMenu: string };
 
@@ -39,7 +39,7 @@ export function SiteHeader({
             <span className="relative flex h-9 w-9 shrink-0 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-bgl-moss/15">
               <Image
                 src={logoUrl}
-                alt=""
+                alt={siteName}
                 fill
                 className="object-contain p-0.5"
                 sizes="36px"
@@ -66,6 +66,12 @@ export function SiteHeader({
             className="rounded-full px-4 py-2 text-sm font-medium text-bgl-muted transition hover:bg-bgl-cream hover:text-bgl-ink"
           >
             {labels.bungalows}
+          </Link>
+          <Link
+            href={`/${locale}/blog`}
+            className="rounded-full px-4 py-2 text-sm font-medium text-bgl-muted transition hover:bg-bgl-cream hover:text-bgl-ink"
+          >
+            {labels.blog}
           </Link>
           <Link
             href={`/${locale}/contact`}

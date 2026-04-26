@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateContactDto } from './dto/create-contact.dto';
 
@@ -7,11 +8,14 @@ export type ContactListStatus = 'all' | 'unread' | 'read' | 'replied';
 
 @Injectable()
 export class ContactService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
 
   async create(dto: CreateContactDto) {
     const phone = dto.phone?.trim() || null;
-    return this.prisma.contactMessage.create({
+    const row = await this.prisma.contactMessage.create({
       data: {
         name: dto.name.trim(),
         email: dto.email.trim().toLowerCase(),
@@ -19,6 +23,8 @@ export class ContactService {
         message: dto.message.trim(),
       },
     });
+    void this.mailService.notifyAdminContactMessage(row).catch(() => undefined);
+    return row;
   }
 
   async findAllForAdmin(params: {

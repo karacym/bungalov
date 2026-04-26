@@ -1,5 +1,6 @@
 'use client';
 
+import { adminMenuLabel } from '@/components/admin/admin-menu-label';
 import { ADMIN_MENU } from '@/components/admin/menu-config';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/cn';
@@ -21,6 +22,7 @@ export function AdminSidebar({
   onToggleCollapsed,
 }: Props) {
   const t = useTranslations('admin');
+  const tNav = useTranslations('nav');
   return (
     <aside
       className={cn(
@@ -54,7 +56,7 @@ export function AdminSidebar({
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
-              {!collapsed ? <span>{t(`menu.${item.key}`)}</span> : null}
+              {!collapsed ? <span>{adminMenuLabel(t, tNav, item.key)}</span> : null}
             </button>
           );
         })}
