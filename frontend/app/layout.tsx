@@ -20,6 +20,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const ogTitle = branding.siteName || title;
 
   const brand = branding.siteName?.trim() || 'Bungalov';
+  const faviconVersion = encodeURIComponent(
+    (branding.faviconUrl?.trim() || branding.logoUrl?.trim() || brand).slice(0, 120),
+  );
   return {
     metadataBase: new URL(siteOrigin),
     title: {
@@ -32,13 +35,11 @@ export async function generateMetadata(): Promise<Metadata> {
       description,
       type: 'website',
     },
-    ...(branding.faviconUrl
-      ? {
-          icons: {
-            icon: [{ url: branding.faviconUrl }],
-          },
-        }
-      : {}),
+    icons: {
+      icon: [{ url: `/api/site-favicon?v=${faviconVersion}` }],
+      shortcut: [{ url: `/api/site-favicon?v=${faviconVersion}` }],
+      apple: [{ url: `/api/site-favicon?v=${faviconVersion}` }],
+    },
   };
 }
 

@@ -27,8 +27,8 @@ export function AdminMobileDrawer({ open, active, onSelect, onClose }: Props) {
         onClick={onClose}
         aria-label={t('drawerClose')}
       />
-      <aside className="absolute left-0 top-0 h-full w-[82%] max-w-xs border-r border-bgl-mist bg-white p-4 shadow-2xl">
-        <div className="mb-4 flex items-center justify-between">
+      <aside className="absolute left-0 top-0 flex h-full w-[82%] max-w-xs flex-col border-r border-bgl-mist bg-white p-4 shadow-2xl">
+        <div className="mb-4 flex items-center justify-between shrink-0">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-bgl-moss">{t('mobileBrand')}</p>
             <p className="text-sm font-semibold text-bgl-ink">{t('mobileNavTitle')}</p>
@@ -38,7 +38,7 @@ export function AdminMobileDrawer({ open, active, onSelect, onClose }: Props) {
           </Button>
         </div>
 
-        <nav className="space-y-2">
+        <nav className="space-y-2 overflow-y-auto pr-1">
           {ADMIN_MENU.map((item) => {
             const Icon = item.icon;
             return (
