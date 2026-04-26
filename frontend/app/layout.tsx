@@ -36,9 +36,9 @@ export async function generateMetadata(): Promise<Metadata> {
       type: 'website',
     },
     icons: {
-      icon: [{ url: `/api/site-favicon?v=${faviconVersion}` }],
-      shortcut: [{ url: `/api/site-favicon?v=${faviconVersion}` }],
-      apple: [{ url: `/api/site-favicon?v=${faviconVersion}` }],
+      icon: [{ url: `/site-favicon?v=${faviconVersion}` }],
+      shortcut: [{ url: `/site-favicon?v=${faviconVersion}` }],
+      apple: [{ url: `/site-favicon?v=${faviconVersion}` }],
     },
   };
 }
