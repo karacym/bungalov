@@ -43,9 +43,12 @@ export async function SiteFooter({ locale, branding }: { locale: string; brandin
               href={waHref(branding.whatsapp)}
               target="_blank"
               rel="noreferrer"
-              className="rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white ring-1 ring-white/20 transition hover:bg-white/20"
+              aria-label={tCta('whatsapp')}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/20 transition hover:bg-white/20"
             >
-              {tCta('whatsapp')}
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-current">
+                <path d="M20.5 3.5A11.2 11.2 0 0 0 12.4 0C6.2 0 1.2 5 1.2 11.2c0 2 .5 3.9 1.5 5.6L1 24l7.4-1.9c1.6.9 3.4 1.3 5.2 1.3 6.2 0 11.2-5 11.2-11.2 0-3-1.2-5.8-3.3-7.9zM13.8 21c-1.6 0-3.1-.4-4.5-1.2l-.3-.2-4.4 1.1 1.2-4.3-.2-.3a9 9 0 1 1 8.2 4.9zm4.9-6.7c-.3-.1-1.8-.9-2.1-1s-.5-.1-.8.2c-.2.3-.8 1-1 1.2-.2.2-.3.2-.6.1a7.3 7.3 0 0 1-2.1-1.3 8 8 0 0 1-1.5-1.9c-.2-.3 0-.5.1-.6l.5-.6.3-.5c.1-.2.1-.4 0-.6l-.9-2.3c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.6.1-.9.4a2.8 2.8 0 0 0-.9 2.1c0 1.2.9 2.4 1 2.6.1.2 1.8 2.8 4.5 3.9.6.3 1.1.4 1.5.5.6.2 1.2.2 1.6.1.5-.1 1.8-.7 2-1.4.3-.7.3-1.3.2-1.4-.1-.2-.3-.2-.6-.3z" />
+              </svg>
             </a>
             <Link
               href={`/${locale}/bungalows`}
