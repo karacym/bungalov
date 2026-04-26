@@ -7,10 +7,10 @@
 #   BUNGALOV_SSH=ubuntu@SUNUCU_IP ./scripts/deploy-live-ssh.sh
 #
 # Varsayilan hedef:
-#   karacym03@80.225.240.253
+#   karacym03@34.40.122.233
 set -euo pipefail
 
-SSH_TARGET="${BUNGALOV_SSH:-karacym03@80.225.240.253}"
+SSH_TARGET="${BUNGALOV_SSH:-karacym03@34.40.122.233}"
 echo "==> SSH: ${SSH_TARGET}"
 echo "==> Uzak komutlar basliyor..."
 
