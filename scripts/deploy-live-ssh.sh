@@ -6,11 +6,11 @@
 #   chmod +x scripts/deploy-live-ssh.sh
 #   BUNGALOV_SSH=ubuntu@SUNUCU_IP ./scripts/deploy-live-ssh.sh
 #
-# Varsayilan hedef (scripts/remote-bootstrap-ubuntu.sh ile uyumlu):
-#   ubuntu@80.225.240.253
+# Varsayilan hedef:
+#   karacym03@80.225.240.253
 set -euo pipefail
 
-SSH_TARGET="${BUNGALOV_SSH:-ubuntu@80.225.240.253}"
+SSH_TARGET="${BUNGALOV_SSH:-karacym03@80.225.240.253}"
 echo "==> SSH: ${SSH_TARGET}"
 echo "==> Uzak komutlar basliyor..."
 
