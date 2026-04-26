@@ -12,5 +12,5 @@ export default createMiddleware({
  * Ayni projede iki `next dev` calistirmayin — ikisi de `.next`e yazar; chunk/CSS 500 donebilir.
  */
 export const config = {
-  matcher: ['/', '/((?!api|_next|_vercel|.*\\..*).*)'],
+  matcher: ['/', '/((?!api|site-favicon|_next|_vercel|.*\\..*).*)'],
 };
