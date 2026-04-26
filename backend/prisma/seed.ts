@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { PrismaClient, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { uniqueBungalowSlug } from '../src/bungalows/bungalow-slug.util';
@@ -35,6 +36,17 @@ async function main() {
     },
   });
 
+  await prisma.user.upsert({
+    where: { email: 'channel-sync@internal.bungalov' },
+    update: { name: 'Airbnb Takvim' },
+    create: {
+      email: 'channel-sync@internal.bungalov',
+      name: 'Airbnb Takvim',
+      password: `channel-${randomUUID()}`,
+      role: UserRole.user,
+    },
+  });
+
   const existing = await prisma.bungalow.count();
   if (existing === 0) {
     const t1 = 'Gol Kenari Premium Bungalov';
@@ -46,6 +58,7 @@ async function main() {
     const b1 = await prisma.bungalow.create({
       data: {
         slug: slug1,
+        icalExportToken: randomUUID(),
         title: t1,
         description:
           'Dogayla ic ice, genis veranda ve jakuzili modern bungalov. Sabah kahvaltisi dahildir.',
@@ -70,6 +83,7 @@ async function main() {
     const b3 = await prisma.bungalow.create({
       data: {
         slug: slug3,
+        icalExportToken: randomUUID(),
         title: t3,
         description: 'Genis cam cephe ve panoramik dag manzarasi. Balayi icin ideal.',
         pricePerNight: 5800,
@@ -197,6 +211,17 @@ async function main() {
   for (const row of missingSlug) {
     const slug = await uniqueBungalowSlug(prisma, row.title, row.id);
     await prisma.bungalow.update({ where: { id: row.id }, data: { slug } });
+  }
+
+  const missingIcal = await prisma.bungalow.findMany({
+    where: { icalExportToken: null },
+    select: { id: true },
+  });
+  for (const row of missingIcal) {
+    await prisma.bungalow.update({
+      where: { id: row.id },
+      data: { icalExportToken: randomUUID() },
+    });
   }
 }
 

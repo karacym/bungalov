@@ -1,9 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 import { existsSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
-import { Prisma, ReservationStatus } from '@prisma/client';
+import { Prisma, ReservationSource, ReservationStatus } from '@prisma/client';
 import { uniqueBungalowSlug } from '../bungalows/bungalow-slug.util';
 import { MailService } from '../mail/mail.service';
+import { CalendarExportService } from '../calendar/calendar-export.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReservationsService } from '../reservations/reservations.service';
 import { CreateAdminManualReservationDto } from '../reservations/dto/create-admin-manual-reservation.dto';
@@ -15,6 +17,7 @@ export class AdminService {
     private readonly prisma: PrismaService,
     private readonly reservationsService: ReservationsService,
     private readonly mailService: MailService,
+    private readonly calendarExport: CalendarExportService,
   ) {}
 
   async stats() {
@@ -48,9 +51,25 @@ export class AdminService {
       data: {
         ...data,
         slug,
+        icalExportToken: randomUUID(),
         features: data.features as Prisma.InputJsonValue,
       },
     });
+  }
+
+  updateBungalowChannels(id: string, body: { externalIcalUrl: string }) {
+    return this.prisma.bungalow.update({
+      where: { id },
+      data: { externalIcalUrl: body.externalIcalUrl?.trim() ?? '' },
+    });
+  }
+
+  ensureIcalExportToken(bungalowId: string) {
+    return this.calendarExport.ensureExportToken(bungalowId);
+  }
+
+  rotateIcalExportToken(bungalowId: string) {
+    return this.calendarExport.rotateExportToken(bungalowId);
   }
 
   async updateBungalow(
@@ -133,6 +152,9 @@ export class AdminService {
       where: { id },
       include: { user: true, bungalow: true },
     });
+    if (before?.source === ReservationSource.AIRBNB) {
+      throw new ForbiddenException('Airbnb takviminden gelen kayitlar buradan degistirilemez');
+    }
     const updated = await this.prisma.reservation.update({
       where: { id },
       data: { status },

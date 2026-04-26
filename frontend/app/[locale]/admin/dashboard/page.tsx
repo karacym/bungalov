@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { BlogModule } from '@/modules/admin/blog-module';
 import { BungalowsModule } from '@/modules/admin/bungalows-module';
 import { CalendarModule } from '@/modules/admin/calendar-module';
+import { ChannelsModule } from '@/modules/admin/channels-module';
 import { ContactMessagesModule } from '@/modules/admin/contact-messages-module';
 import { ContentModule } from '@/modules/admin/content-module';
 import { DashboardModule } from '@/modules/admin/dashboard-module';
@@ -126,6 +127,15 @@ export default function AdminDashboardPage() {
               onUploadMediaPersist={admin.uploadMedia}
             />
           ) : null}
+          {activeMenu === 'channels' ? (
+            <ChannelsModule
+              bungalows={admin.bungalows}
+              onUpdateChannels={admin.updateBungalowChannels}
+              onEnsureIcalToken={admin.ensureIcalToken}
+              onRotateIcalToken={admin.rotateIcalToken}
+              onSyncCalendars={admin.syncCalendars}
+            />
+          ) : null}
           {activeMenu === 'reservations' ? (
             <ReservationsModule
               items={admin.reservations}
@@ -135,7 +145,9 @@ export default function AdminDashboardPage() {
               onCreateManual={admin.createManualReservation}
             />
           ) : null}
-          {activeMenu === 'calendar' ? <CalendarModule bungalows={admin.bungalows} /> : null}
+          {activeMenu === 'calendar' ? (
+            <CalendarModule bungalows={admin.bungalows} fetchCalendarEvents={admin.fetchCalendarEvents} />
+          ) : null}
           {activeMenu === 'payments' ? (
             <PaymentsModule
               payments={admin.payments}

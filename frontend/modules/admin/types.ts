@@ -1,6 +1,7 @@
 export type AdminMenuKey =
   | 'dashboard'
   | 'bungalows'
+  | 'channels'
   | 'reservations'
   | 'calendar'
   | 'payments'
@@ -55,6 +56,8 @@ export type ContactListStatus = 'all' | 'unread' | 'read' | 'replied';
 
 export type ReservationStatus = 'pending' | 'approved' | 'cancelled';
 
+export type ReservationSource = 'DIRECT' | 'AIRBNB' | 'BOOKING';
+
 export type AdminStats = {
   totalReservations: number;
   monthlyRevenue: number;
@@ -81,6 +84,8 @@ export type Bungalow = {
   location: string;
   images: string[];
   features: Partial<Record<BungalowFeatureKey, boolean | string>>;
+  icalExportToken?: string | null;
+  externalIcalUrl?: string | null;
 };
 
 export type Reservation = {
@@ -93,6 +98,7 @@ export type Reservation = {
   amount: number;
   status: ReservationStatus;
   paymentStatus: 'pending' | 'paid' | 'failed';
+  source: ReservationSource;
 };
 
 export type Payment = {

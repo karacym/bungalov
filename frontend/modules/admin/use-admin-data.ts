@@ -18,6 +18,7 @@ import type {
   Payment,
   PaymentProviderSetting,
   Reservation,
+  ReservationSource,
   ReservationStatus,
   RevenuePoint,
   SitePage,
@@ -31,6 +32,7 @@ type RawReservation = {
   checkOut?: string;
   totalPrice?: string | number;
   status: 'pending' | 'paid' | 'cancelled';
+  source?: ReservationSource;
   user?: { name?: string; email?: string };
   bungalow?: { title?: string };
   payment?: { status?: 'pending' | 'paid' | 'failed' | 'refunded' | string };
@@ -58,6 +60,7 @@ async function parseBlogError(response: Response): Promise<string> {
 }
 
 function mapRawToReservation(item: RawReservation): Reservation {
+  const src = item.source ?? 'DIRECT';
   return {
     id: item.id,
     customerName: item.user?.name ?? 'Misafir',
@@ -67,6 +70,7 @@ function mapRawToReservation(item: RawReservation): Reservation {
     checkOut: item.checkOut ?? new Date().toISOString(),
     amount: Number(item.totalPrice ?? 0),
     status: mapReservationStatus(item.status),
+    source: src,
     paymentStatus:
       item.payment?.status === 'paid'
         ? 'paid'
@@ -364,6 +368,8 @@ export function useAdminData() {
       setBungalows(
         bungalowsPayload.map((item) => ({
           ...item,
+          icalExportToken: (item as { icalExportToken?: string | null }).icalExportToken ?? null,
+          externalIcalUrl: (item as { externalIcalUrl?: string | null }).externalIcalUrl ?? '',
           capacity: Number((item.features as Record<string, unknown>)?.maxGuests ?? 2),
           images: (item.images ?? []).map((image) => toAbsoluteMediaUrl(String(image))),
           features: (item.features ?? {}) as Bungalow['features'],
@@ -482,6 +488,8 @@ export function useAdminData() {
         capacity: Number((created.features as Record<string, unknown>)?.maxGuests ?? payload.capacity ?? 2),
         images: (created.images ?? []).map((image) => toAbsoluteMediaUrl(String(image))),
         features: (created.features ?? {}) as Bungalow['features'],
+        icalExportToken: (created as { icalExportToken?: string | null }).icalExportToken ?? null,
+        externalIcalUrl: (created as { externalIcalUrl?: string | null }).externalIcalUrl ?? '',
       };
       setBungalows((prev) => [mapped, ...prev]);
       return mapped;
@@ -512,6 +520,8 @@ export function useAdminData() {
         capacity: Number((updated.features as Record<string, unknown>)?.maxGuests ?? payload.capacity ?? 2),
         images: (updated.images ?? []).map((image) => toAbsoluteMediaUrl(String(image))),
         features: (updated.features ?? {}) as Bungalow['features'],
+        icalExportToken: (updated as { icalExportToken?: string | null }).icalExportToken ?? null,
+        externalIcalUrl: (updated as { externalIcalUrl?: string | null }).externalIcalUrl ?? '',
       };
       setBungalows((prev) => prev.map((item) => (item.id === id ? mapped : item)));
       return mapped;
@@ -770,6 +780,88 @@ export function useAdminData() {
     [],
   );
 
+  const updateBungalowChannels = useCallback(
+    async (bungalowId: string, externalIcalUrl: string) => {
+      const response = await authFetch(`/admin/bungalows/${bungalowId}/channels`, {
+        method: 'PATCH',
+        body: JSON.stringify({ externalIcalUrl }),
+      });
+      const updated = (await response.json()) as Bungalow & {
+        icalExportToken?: string | null;
+        externalIcalUrl?: string | null;
+        features?: Record<string, unknown>;
+      };
+      const mapped: Bungalow = {
+        ...updated,
+        capacity: Number((updated.features as Record<string, unknown>)?.maxGuests ?? 2),
+        images: (updated.images ?? []).map((image) => toAbsoluteMediaUrl(String(image))),
+        features: (updated.features ?? {}) as Bungalow['features'],
+        icalExportToken: updated.icalExportToken ?? null,
+        externalIcalUrl: updated.externalIcalUrl ?? '',
+      };
+      setBungalows((prev) => prev.map((b) => (b.id === bungalowId ? mapped : b)));
+      return mapped;
+    },
+    [authFetch],
+  );
+
+  const ensureIcalToken = useCallback(
+    async (bungalowId: string) => {
+      const response = await authFetch(`/admin/bungalows/${bungalowId}/ical-token/ensure`, {
+        method: 'POST',
+      });
+      const { icalExportToken } = (await response.json()) as { icalExportToken: string };
+      setBungalows((prev) =>
+        prev.map((b) => (b.id === bungalowId ? { ...b, icalExportToken } : b)),
+      );
+      return icalExportToken;
+    },
+    [authFetch],
+  );
+
+  const rotateIcalToken = useCallback(
+    async (bungalowId: string) => {
+      const response = await authFetch(`/admin/bungalows/${bungalowId}/ical-token/rotate`, {
+        method: 'POST',
+      });
+      const { icalExportToken } = (await response.json()) as { icalExportToken: string };
+      setBungalows((prev) =>
+        prev.map((b) => (b.id === bungalowId ? { ...b, icalExportToken } : b)),
+      );
+      return icalExportToken;
+    },
+    [authFetch],
+  );
+
+  const syncCalendars = useCallback(async () => {
+    const response = await authFetch('/admin/calendar/sync', { method: 'POST' });
+    return (await response.json()) as Array<{
+      ok: boolean;
+      bungalowId: string;
+      imported: number;
+      skipped: number;
+      error?: string;
+    }>;
+  }, [authFetch]);
+
+  const fetchCalendarEvents = useCallback(
+    async (bungalowId: string, from: string, to: string) => {
+      const q = new URLSearchParams({ bungalowId, from, to });
+      const response = await authFetch(`/admin/calendar/events?${q}`);
+      return (await response.json()) as {
+        events: Array<{
+          id: string;
+          checkIn: string;
+          checkOut: string;
+          source: ReservationSource;
+          status: string;
+          guestName: string;
+        }>;
+      };
+    },
+    [authFetch],
+  );
+
   const deleteBlogPost = useCallback(
     async (id: string) => {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -838,5 +930,10 @@ export function useAdminData() {
     updateBlogPost,
     deleteBlogPost,
     refresh,
+    updateBungalowChannels,
+    ensureIcalToken,
+    rotateIcalToken,
+    syncCalendars,
+    fetchCalendarEvents,
   };
 }

@@ -23,6 +23,12 @@ enum ReservationStatus {
   cancelled
 }
 
+enum ReservationSource {
+  DIRECT
+  AIRBNB
+  BOOKING
+}
+
 model User {
   id           String        @id @default(uuid())
   name         String
@@ -34,33 +40,42 @@ model User {
 }
 
 model Bungalow {
-  id            String         @id @default(uuid())
-  slug          String?        @unique
-  title         String
-  description   String
-  pricePerNight Decimal        @db.Decimal(10, 2)
-  location      String
-  images        String[]
-  features      Json
-  createdAt     DateTime       @default(now())
-  reservations  Reservation[]
-  availability  Availability[]
-  rooms         Room[]
+  id               String         @id @default(uuid())
+  slug             String?        @unique
+  title            String
+  description      String
+  pricePerNight    Decimal        @db.Decimal(10, 2)
+  location         String
+  images           String[]
+  features         Json
+  // ICS export token (Airbnb takvime yapistirilan URL); bos satirlarda seed veya ilk talepte uretilir.
+  icalExportToken  String?        @unique
+  externalIcalUrl  String         @default("")
+  createdAt        DateTime       @default(now())
+  reservations     Reservation[]
+  availability     Availability[]
+  rooms            Room[]
 }
 
 model Reservation {
-  id          String            @id @default(uuid())
-  userId      String
-  bungalowId  String
-  checkIn     DateTime
-  checkOut    DateTime
-  guests      Int               @default(1)
-  totalPrice  Decimal           @db.Decimal(10, 2)
-  status      ReservationStatus @default(pending)
-  createdAt   DateTime          @default(now())
-  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  bungalow    Bungalow          @relation(fields: [bungalowId], references: [id], onDelete: Cascade)
-  payment     Payment?
+  id           String             @id @default(uuid())
+  userId       String
+  bungalowId   String
+  checkIn      DateTime
+  checkOut     DateTime
+  guests       Int                @default(1)
+  totalPrice   Decimal            @db.Decimal(10, 2)
+  status       ReservationStatus  @default(pending)
+  source       ReservationSource  @default(DIRECT)
+  externalUid  String?
+  syncId       String?
+  createdAt    DateTime           @default(now())
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bungalow     Bungalow           @relation(fields: [bungalowId], references: [id], onDelete: Cascade)
+  payment      Payment?
+
+  @@index([bungalowId, source])
+  @@unique([bungalowId, externalUid])
 }
 
 model Payment {

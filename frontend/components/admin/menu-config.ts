@@ -8,6 +8,7 @@ import {
   Image,
   Languages,
   LayoutDashboard,
+  Link2,
   Mail,
   Newspaper,
   NotebookPen,
@@ -23,6 +24,7 @@ export const ADMIN_MENU: Array<{
 }> = [
   { key: 'dashboard', icon: LayoutDashboard },
   { key: 'bungalows', icon: Home },
+  { key: 'channels', icon: Link2 },
   { key: 'reservations', icon: FileText },
   { key: 'calendar', icon: CalendarDays },
   { key: 'payments', icon: CreditCard },

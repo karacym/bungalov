@@ -252,6 +252,7 @@
     "menu": {
       "dashboard": "Dashboard",
       "bungalows": "Bungalows",
+      "channels": "Channel management",
       "reservations": "Reservations",
       "calendar": "Calendar",
       "payments": "Payments",

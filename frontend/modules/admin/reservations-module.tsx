@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import type { Bungalow, Reservation, ReservationStatus } from './types';
+import type { Bungalow, Reservation, ReservationSource, ReservationStatus } from './types';
 import { type FormEvent, useMemo, useState } from 'react';
 
 type ManualPayload = {
@@ -63,6 +63,8 @@ export function ReservationsModule({
   const selected = filtered.find((item) => item.id === selectedId) ?? null;
 
   async function updateStatus(id: string, next: ReservationStatus) {
+    const current = items.find((item) => item.id === id);
+    if (current?.source === 'AIRBNB') return;
     onChange(items.map((item) => (item.id === id ? { ...item, status: next } : item)));
     if (!onPersistStatus) return;
 
@@ -252,6 +254,7 @@ export function ReservationsModule({
                     <div>
                       <p className="text-sm font-semibold text-bgl-ink">{item.customerName}</p>
                       <p className="text-xs text-bgl-muted">{item.bungalowName}</p>
+                      <SourceTag source={item.source} />
                     </div>
                     <Badge
                       variant={
@@ -295,26 +298,38 @@ export function ReservationsModule({
                   label="Odeme"
                   value={`${selected.amount.toLocaleString('tr-TR')} TL (${selected.paymentStatus})`}
                 />
+                <DetailRow label="Kaynak" value={sourceLabel(selected.source)} />
 
-                <div className="grid gap-2 sm:grid-cols-3">
-                  <Button
-                    variant="secondary"
-                    disabled={saving}
-                    onClick={() => void updateStatus(selected.id, 'approved')}
-                  >
-                    Onayla
-                  </Button>
-                  <Button variant="outline" disabled={saving} onClick={() => void updateStatus(selected.id, 'pending')}>
-                    Beklemede
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    disabled={saving}
-                    onClick={() => void updateStatus(selected.id, 'cancelled')}
-                  >
-                    Iptal et
-                  </Button>
-                </div>
+                {selected.source === 'AIRBNB' ? (
+                  <p className="text-xs text-bgl-muted">
+                    Bu kayit Airbnb iCal senkronu ile geldi. Durum degisikligi yapmak icin once Airbnb
+                    tarafini guncelleyin veya senkronu bekleyin.
+                  </p>
+                ) : (
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    <Button
+                      variant="secondary"
+                      disabled={saving}
+                      onClick={() => void updateStatus(selected.id, 'approved')}
+                    >
+                      Onayla
+                    </Button>
+                    <Button
+                      variant="outline"
+                      disabled={saving}
+                      onClick={() => void updateStatus(selected.id, 'pending')}
+                    >
+                      Beklemede
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      disabled={saving}
+                      onClick={() => void updateStatus(selected.id, 'cancelled')}
+                    >
+                      Iptal et
+                    </Button>
+                  </div>
+                )}
                 {saving ? <p className="text-xs text-bgl-muted">Guncelleniyor...</p> : null}
                 {saveError ? <p className="text-xs text-rose-700">{saveError}</p> : null}
               </>
@@ -325,6 +340,25 @@ export function ReservationsModule({
         </Card>
       </div>
     </div>
+  );
+}
+
+function sourceLabel(s: ReservationSource): string {
+  if (s === 'AIRBNB') return 'Airbnb';
+  if (s === 'BOOKING') return 'Booking.com';
+  return 'Web / manuel';
+}
+
+function SourceTag({ source }: { source: ReservationSource }) {
+  const isAirbnb = source === 'AIRBNB';
+  return (
+    <span
+      className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+        isAirbnb ? 'bg-orange-100 text-orange-900' : 'bg-bgl-mist text-bgl-muted'
+      }`}
+    >
+      {sourceLabel(source)}
+    </span>
   );
 }
 

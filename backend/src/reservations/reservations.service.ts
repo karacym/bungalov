@@ -1,10 +1,11 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { ReservationStatus } from '@prisma/client';
+import { ReservationSource, ReservationStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import type { ReservationMailContext } from '../mail/mail.service';
 import { MailService } from '../mail/mail.service';
@@ -157,6 +158,7 @@ export class ReservationsService {
         guests: dto.guests ?? 1,
         totalPrice,
         status,
+        source: ReservationSource.DIRECT,
       },
       include: {
         user: true,
@@ -194,6 +196,9 @@ export class ReservationsService {
     const reservation = await this.prisma.reservation.findUnique({ where: { id } });
     if (!reservation) {
       throw new NotFoundException('Reservation not found');
+    }
+    if (reservation.source === ReservationSource.AIRBNB) {
+      throw new ForbiddenException('Airbnb takviminden gelen kayitlar buradan degistirilemez');
     }
 
     return this.prisma.reservation.update({ where: { id }, data: { status } });

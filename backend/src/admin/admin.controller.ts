@@ -22,6 +22,7 @@ import { diskStorage } from 'multer';
 import { BlogService } from '../blog/blog.service';
 import { CreateBlogPostDto } from '../blog/dto/create-blog-post.dto';
 import { UpdateBlogPostDto } from '../blog/dto/update-blog-post.dto';
+import { CalendarSyncService } from '../calendar/calendar-sync.service';
 import { AdminService } from './admin.service';
 import { TestEmailDto, UpdateEmailSettingsDto } from './dto/update-email-settings.dto';
 import { ContactService } from '../contact/contact.service';
@@ -38,6 +39,7 @@ export class AdminController {
     private readonly adminService: AdminService,
     private readonly contactService: ContactService,
     private readonly blogService: BlogService,
+    private readonly calendarSync: CalendarSyncService,
   ) {}
 
   @Get('stats')
@@ -63,6 +65,36 @@ export class AdminController {
     },
   ) {
     return this.adminService.createBungalow(body);
+  }
+
+  @Patch('bungalows/:id/channels')
+  updateBungalowChannels(@Param('id') id: string, @Body() body: { externalIcalUrl: string }) {
+    return this.adminService.updateBungalowChannels(id, body);
+  }
+
+  @Post('bungalows/:id/ical-token/ensure')
+  async ensureIcalToken(@Param('id') id: string) {
+    const icalExportToken = await this.adminService.ensureIcalExportToken(id);
+    return { icalExportToken };
+  }
+
+  @Post('bungalows/:id/ical-token/rotate')
+  rotateIcalToken(@Param('id') id: string) {
+    return this.adminService.rotateIcalExportToken(id);
+  }
+
+  @Get('calendar/events')
+  calendarEvents(
+    @Query('bungalowId') bungalowId: string,
+    @Query('from') from: string,
+    @Query('to') to: string,
+  ) {
+    return this.calendarSync.listAdminCalendarEvents(bungalowId, from, to);
+  }
+
+  @Post('calendar/sync')
+  syncCalendars() {
+    return this.calendarSync.syncAllBungalows();
   }
 
   @Put('bungalows/:id')
